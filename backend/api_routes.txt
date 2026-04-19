@@ -1,0 +1,38 @@
+# Core FastAPI routes (Sonic AI)
+
+## Conversations
+
+POST   /conversations/
+GET    /conversations/
+GET    /conversations/{conversation_id}
+GET    /conversations/{conversation_id}/messages
+PATCH  /conversations/{conversation_id}
+
+## Projects
+
+POST   /projects/?owner_id={user_id}
+GET    /projects/
+GET    /projects/{project_id}
+
+## Tasks
+
+POST   /tasks/
+GET    /tasks/
+GET    /tasks/{task_id}
+
+## Agent logs
+
+POST   /logs/
+GET    /logs
+GET    /logs/{log_id}
+GET    /logs/task/{task_id}
+DELETE /logs/{log_id}
+
+## (Existing but not fully documented here)
+
+# Multi-agent execution (naming may vary in codebase)
+# e.g. POST /agent/execute or similar endpoint that:
+# - Takes conversation_id, agent_name, and user message
+# - Calls the LLM using llm_config
+# - Saves user + agent messages
+# - Creates AgentLog rows

@@ -1,0 +1,177 @@
+{
+  "conversations": {
+    "list_conversations": {
+      "endpoint": "GET /conversations/",
+      "response": [
+        {
+          "id": 1,
+          "user_id": 1,
+          "agent_name": "manager",
+          "display_name": "Manager Kelly",
+          "created_at": "2026-04-12T19:04:37.000000",
+          "updated_at": "2026-04-12T21:48:29.000000"
+        },
+        {
+          "id": 2,
+          "user_id": 1,
+          "agent_name": "creative_director",
+          "display_name": "Creative Director",
+          "created_at": "2026-04-12T19:06:07.000000",
+          "updated_at": "2026-04-13T10:37:20.000000"
+        }
+      ]
+    },
+    "get_conversation_with_messages": {
+      "endpoint": "GET /conversations/1",
+      "response": {
+        "id": 1,
+        "user_id": 1,
+        "agent_name": "manager",
+        "display_name": "Manager Kelly",
+        "created_at": "2026-04-12T19:04:37.000000",
+        "updated_at": "2026-04-12T21:48:29.000000",
+        "messages": [
+          {
+            "id": 1,
+            "conversation_id": 1,
+            "sender": "user",
+            "content": "Help me plan my debut EP rollout.",
+            "created_at": "2026-04-12T19:04:37.000000"
+          },
+          {
+            "id": 2,
+            "conversation_id": 1,
+            "sender": "manager",
+            "content": "Great, tell me your release date, budget, and target platforms.",
+            "created_at": "2026-04-12T19:04:38.000000"
+          }
+        ]
+      }
+    },
+    "patch_conversation_display_name": {
+      "endpoint": "PATCH /conversations/1",
+      "request": {
+        "display_name": "Kanye"
+      },
+      "response": {
+        "id": 1,
+        "user_id": 1,
+        "agent_name": "manager",
+        "display_name": "Kanye",
+        "created_at": "2026-04-12T19:04:37.000000",
+        "updated_at": "2026-04-14T11:10:00.000000"
+      }
+    }
+  },
+  "projects": {
+    "create_project": {
+      "endpoint": "POST /projects/?owner_id=1",
+      "request": {
+        "name": "Debut EP Rollout",
+        "description": "Planning content and strategy for my first EP.",
+        "status": "in_progress"
+      },
+      "response": {
+        "name": "Debut EP Rollout",
+        "description": "Planning content and strategy for my first EP.",
+        "id": 1,
+                "owner_id": 1
+      }
+    },
+    "list_projects": {
+      "endpoint": "GET /projects/",
+      "response": [
+        {
+          "name": "Debut EP Rollout",
+          "description": "Planning content and strategy for my first EP.",
+          "id": 1,
+          "owner_id": 1
+        }
+      ]
+    },
+    "get_project": {
+      "endpoint": "GET /projects/1",
+      "response": {
+        "name": "Debut EP Rollout",
+        "description": "Planning content and strategy for my first EP.",
+        "id": 1,
+        "owner_id": 1
+      }
+    }
+  },
+  "tasks": {
+    "create_task": {
+      "endpoint": "POST /tasks/",
+      "request": {
+        "title": "Shoot cover art",
+        "description": "Book photographer and shoot EP cover.",
+        "is_completed": false,
+        "project_id": 1
+      },
+      "response": {
+        "title": "Shoot cover art",
+        "description": "Book photographer and shoot EP cover.",
+        "is_completed": false,
+        "id": 1,
+        "project_id": 1,
+        "user_id": 1
+      }
+    },
+    "list_tasks": {
+      "endpoint": "GET /tasks/",
+      "response": [
+        {
+          "title": "Shoot cover art",
+          "description": "Book photographer and shoot EP cover.",
+          "is_completed": false,
+          "id": 1,
+          "project_id": 1,
+          "user_id": 1
+        }
+      ]
+    },
+    "get_task": {
+      "endpoint": "GET /tasks/1",
+      "response": {
+        "title": "Shoot cover art",
+        "description": "Book photographer and shoot EP cover.",
+        "is_completed": false,
+        "id": 1,
+        "project_id": 1,
+        "user_id": 1
+      }
+    }
+  },
+  "agent_logs": {
+    "list_logs": {
+      "endpoint": "GET /logs",
+      "response": [
+        {
+          "id": 1,
+          "agent_name": "artist_workflow",
+          "action": "run",
+          "timestamp": "2026-04-06T20:13:23.863960"
+        },
+        {
+          "id": 8,
+          "agent_name": "manager",
+          "action": "chat",
+          "timestamp": "2026-04-12T19:04:37.245878"
+        }
+      ]
+    },
+    "get_log": {
+      "endpoint": "GET /logs/1",
+      "response": {
+        "id": 1,
+        "agent_name": "artist_workflow",
+        "action": "run",
+        "timestamp": "2026-04-06T20:13:23.863960"
+      }
+    },
+    "get_logs_for_task_empty": {
+      "endpoint": "GET /logs/task/1",
+      "response": []
+    }
+  }
+}

@@ -1,0 +1,67 @@
+# MODELS
+
+## Conversation (app/models/conversation.py)
+
+id: int
+user_id: int
+agent_name: str       # "manager", "creative_director", "publicist", "team"
+display_name: str     # user-facing label, can change any time
+created_at: datetime
+updated_at: datetime
+
+Relationships:
+- messages: List[Message]
+
+
+## Message (app/models/conversation.py or similar)
+
+id: int
+conversation_id: int
+sender: str           # "user" or agent_name
+content: str
+created_at: datetime
+
+
+## Project (app/models/project.py)
+
+id: int
+name: str
+description: str | None
+owner_id: int         # FK to User.id
+
+
+## Task (app/models/task.py)
+
+id: int
+title: str
+description: str | None
+is_completed: bool
+status: str           # default "pending"
+project_id: int | None
+user_id: int          # FK to User.id
+
+Relationships:
+- project: Project
+- owner: User
+- logs: List[AgentLog] (via AgentLog.task backref)
+
+
+## AgentLog (app/models/agent_log.py)
+
+id: int
+agent_name: str       # "manager", "creative_director", "publicist", "team", "artist_workflow"
+action: str           # e.g. "run", "chat"
+input_payload: str    # Text (typically JSON as string)
+output_result: str    # Text (typically JSON as string)
+timestamp: datetime
+task_id: int | None   # optional FK to Task.id
+
+Relationships:
+- task: Task
+
+
+## User (app/models/user.py)
+
+id: int
+email: str
+... (other auth fields, not critical for Lovable)

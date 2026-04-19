@@ -1,0 +1,507 @@
+backend_overview.txt :
+
+[
+    # RolloutRoom Backend Overview
+
+This document explains the main pieces of the RolloutRoom backend: how requests flow through the system, the core data models, and the important API routes and configuration for the multi‑agent workflow.
+
+---
+
+## 1. High-level architecture
+
+- Stack: FastAPI + SQLAlchemy + relational DB.
+- Auth: Requests are made by an authenticated user (current_user), resolved via get_current_user and JWT access tokens issued from /auth/login.
+- Core domain:
+  - Conversations & messages for multi-agent chat.
+  - Projects & tasks for planning and tracking work.
+  - Agent logs to record what each AI agent did and when.
+- LLM: Groq model exposed via OpenAI-compatible API, configured through a shared llm_config used by all agents.
+
+---
+
+## 2. LLM configuration (Groq)
+
+All agents share a single Groq-backed llm_config:
+
+config_list = [
+    {
+        "model": "llama-3.3-70b-versatile",
+        "api_type": "openai",
+        "base_url": "https://api.groq.com/openai/v1",
+        "api_key": GROQ_API_KEY,
+        "request_timeout": 60,
+    }
+]
+
+llm_config = {
+    "config_list": config_list,
+    "temperature": 0.7,
+    "timeout": 60,
+}
+
+Agents (manager, creative_director, publicist, team, artist_workflow) are all created with this llm_config, so they share model, temperature, and timeout behaviour.
+
+---
+
+## 3. Data models
+
+### 3.1 Conversation & Message
+
+Conversation
+- id: primary key
+- user_id: owner of the conversation
+- agent_name: stable agent identifier ("manager", "creative_director", "publicist", "team", "artist_workflow")
+- display_name: user-facing label, can be changed at any time (e.g. "Manager Kelly" -> "Kanye")
+- created_at, updated_at
+
+Message
+- id
+- conversation_id
+- sender: "user" or agent_name
+- content
+- created_at
+
+Conversations group messages between the user and a specific agent. display_name is cosmetic; backend routing always uses agent_name as the stable key.
+
+### 3.2 Project & Task
+
+Project
+- id
+- name
+- description
+- owner_id
+
+Task
+- id
+- title
+- description
+- is_completed: bool
+- status: str (default "pending")
+- project_id: optional FK to Project.id
+- user_id: owner of the task
+
+Projects group higher-level initiatives (e.g. "Debut EP Rollout"), tasks are concrete actions (e.g. "Shoot cover art").
+
+### 3.3 AgentLog
+
+AgentLog
+- id
+- agent_name: "manager", "creative_director", "publicist", "team", "artist_workflow"
+- action: e.g. "run", "chat"
+- input_payload: text/json of what was sent to the agent
+- output_result: text/json of what the agent returned
+- timestamp
+- task_id: nullable FK to Task.id
+
+This supports inspecting all agent activity and, later, filtering logs by task.
+
+### 3.4 User
+
+User
+- id
+- email
+- hashed_password
+- created_at, updated_at
+- (other profile/auth fields as defined in app/models/user.py)
+
+Users register/login via /auth/register and /auth/login and then authenticate via Bearer JWT.
+
+---
+
+## 4. API routes
+
+### 4.1 Auth
+
+Prefix: /auth
+
+POST /auth/register
+- Body: UserCreate (email, password, etc.)
+- Behaviour: Fails if email already registered; creates user and returns UserResponse.
+
+POST /auth/login
+- Body: OAuth2PasswordRequestForm (username = email, password)
+- Behaviour: Verifies credentials, returns {"access_token": "...", "token_type": "bearer"}.
+
+---
+
+### 4.2 Users
+
+Prefix: /users
+
+POST /users/
+- Create a new user (mainly for internal/admin flows; normal signup should use /auth/register).
+
+GET /users/
+- List all users.
+
+GET /users/{user_id}
+- Get a single user by id.
+
+DELETE /users/{user_id}
+- Delete a user; requires current_user via get_current_user.
+
+---
+
+### 4.3 Conversations & messages
+
+Prefix: /conversations
+
+POST /conversations/
+- Create a new conversation for the current user and a given agent.
+
+Request:
+{
+  "agent_name": "manager",
+  "display_name": "Manager Kelly"
+}
+
+Response shape:
+{
+  "id": 1,
+  "user_id": 1,
+  "agent_name": "manager",
+  "display_name": "Manager Kelly",
+  "created_at": "...",
+  "updated_at": "..."
+}
+
+GET /conversations/
+- List all conversations for the current user, ordered by updated_at desc.
+
+GET /conversations/{conversation_id}
+- Get one conversation plus all messages (chronological).
+
+Response shape:
+{
+  "id": 1,
+  "user_id": 1,
+  "agent_name": "manager",
+  "display_name": "Manager Kelly",
+  "created_at": "...",
+  "updated_at": "...",
+  "messages": [
+    {
+      "id": 1,
+      "conversation_id": 1,
+      "sender": "user",
+      "content": "Help me plan my debut EP rollout.",
+      "created_at": "..."
+    },
+    {
+      "id": 2,
+      "conversation_id": 1,
+      "sender": "manager",
+      "content": "Great, tell me your release date, budget, and target platforms.",
+      "created_at": "..."
+    }
+  ]
+}
+
+GET /conversations/{conversation_id}/messages
+- List only the messages for a given conversation (chronological).
+
+PATCH /conversations/{conversation_id}
+- Update mutable fields on a conversation (currently display_name).
+
+Request:
+{
+  "display_name": "Kanye"
+}
+
+---
+
+### 4.4 Projects
+
+Prefix: /projects
+
+POST /projects/?owner_id={user_id}
+- Create a project for the given owner.
+
+Body:
+{
+  "name": "Debut EP Rollout",
+  "description": "Planning content and strategy for my first EP."
+}
+
+Response:
+{
+  "id": 1,
+  "owner_id": 1,
+  "name": "Debut EP Rollout",
+  "description": "Planning content and strategy for my first EP."
+}
+
+GET /projects/
+- List projects for the current user.
+
+GET /projects/{project_id}
+- Get a single project by id.
+
+---
+
+### 4.5 Tasks
+
+Prefix: /tasks
+
+POST /tasks/
+- Create a task, optionally linked to a project.
+
+Body:
+{
+  "title": "Shoot cover art",
+  "description": "Book photographer and shoot EP cover.",
+  "is_completed": false,
+  "project_id": 1
+}
+
+Response:
+{
+  "id": 1,
+  "title": "Shoot cover art",
+  "description": "Book photographer and shoot EP cover.",
+  "is_completed": false,
+  "status": "pending",
+  "project_id": 1,
+  "user_id": 1
+}
+
+GET /tasks/
+- List tasks for the current user.
+
+GET /tasks/{task_id}
+- Get a specific task by id.
+
+---
+
+### 4.6 Agent logs
+
+Prefix: /agent
+
+POST /agent/logs
+- Create an AgentLog record (primarily for internal/testing use).
+
+GET /agent/logs
+- List all logs.
+
+GET /agent/logs/{log_id}
+- Get a single log.
+
+GET /agent/logs/task/{task_id}
+- List logs associated with a given task.
+
+DELETE /agent/logs/{log_id}
+- Delete a log by id.
+
+---
+
+### 4.7 Multi-agent execution
+
+Prefix: /agent
+
+POST /agent/execute
+- Single entrypoint for running any agent action.
+
+Expected JSON body:
+{
+  "agent_name": "manager",
+  "action": "chat",
+  "payload": {
+    "conversation_id": 1,
+    "message": "Help me plan my debut EP rollout."
+  }
+}
+
+Behaviour (router + service):
+- app/api/routes/agent.py defines:
+
+  async def execute_agent(agent_name: str,
+                          action: str,
+                          payload: dict,
+                          db: Session = Depends(get_db),
+                          current_user: User = Depends(get_current_user)):
+
+- Router JSON-serializes payload then calls:
+  await execute_agent_action(db, agent_name, action, payload_str)
+
+- Service execute_agent_action is responsible for:
+  - Resolving the concrete agent implementation from agent_name + action.
+  - Calling the LLM using shared llm_config (Groq via OpenAI-compatible API).
+  - Writing new Message rows tied to the given conversation_id inside payload.
+  - Creating an AgentLog row with agent_name, action, input_payload, output_result, and optional task_id.
+
+---
+
+## 5. Multi-agent execution flow (end-to-end)
+
+1) User selects an agent (e.g. manager) and a conversation, or creates one via POST /conversations/.
+2) Frontend sends a request to POST /agent/execute with:
+   - agent_name (e.g. "manager")
+   - action (e.g. "chat")
+   - payload including conversation_id and the latest user message.
+3) Backend routes into execute_agent_action, which uses llm_config and the Groq/OpenAI-compatible API to run the appropriate agent logic.
+4) The LLM response is:
+   - Saved as a Message row for that conversation.
+   - Logged as an AgentLog record with input and output payloads, and (optionally) associated task_id.
+5) Frontend refreshes:
+   - The conversation screen (GET /conversations/{id}).
+   - Any related project/task views (GET /projects/, GET /tasks/).
+
+All domain agents (manager, creative_director, publicist, team, artist_workflow) follow this pattern. They differ in system prompts and downstream behaviour, not in how the transport or llm_config works.
+
+---
+
+## 6. How to use this doc
+
+- Save as backend_overview.txt or backend_overview.md in the RolloutRoom repo.
+- Upload alongside:
+  - api_routes.txt (exact routes list).
+  - Any sample_responses.json you create (example requests/responses per endpoint).
+
+This gives other tools and collaborators a clear, up-to-date picture of the RolloutRoom backend, including the multi-agent /agent/execute entrypoint.
+]
+
+api_routes.txt :
+
+[
+    # Core FastAPI routes
+
+## Root
+
+GET    /
+
+## Auth  (JWT, password grant)
+
+POST   /auth/register
+POST   /auth/login      # OAuth2PasswordRequestForm (username = email, password)
+
+## Users
+
+POST   /users/          # Create user
+GET    /users/          # List all users
+GET    /users/{user_id}
+DELETE /users/{user_id}
+
+## Conversations
+
+POST   /conversations/
+GET    /conversations/
+GET    /conversations/{conversation_id}
+GET    /conversations/{conversation_id}/messages
+PATCH  /conversations/{conversation_id}
+
+## Projects
+
+POST   /projects/?owner_id={user_id}
+GET    /projects/
+GET    /projects/{project_id}
+
+## Tasks
+
+POST   /tasks/
+GET    /tasks/
+GET    /tasks/{task_id}
+
+## Agent logs  (via /agent router)
+
+POST   /agent/logs
+GET    /agent/logs
+GET    /agent/logs/{log_id}
+GET    /agent/logs/task/{task_id}
+DELETE /agent/logs/{log_id}
+
+## Multi-agent execution
+
+POST   /agent/execute
+
+# JSON body:
+# {
+#   "agent_name": "manager" | "creative_director" | "publicist" | "team" | "artist_workflow",
+#   "action": "chat" | "plan" | "run_workflow",
+#   "payload": {
+#     "conversation_id": 1,
+#     "message": "Help me plan my debut EP rollout."
+#   }
+# }
+#
+# Notes:
+# - Uses execute_agent_action(...) with shared llm_config (Groq via OpenAI-compatible API).
+# - Service is responsible for:
+#   - Calling the correct agent by agent_name + action.
+#   - Appending Message rows to the given conversation.
+#   - Creating AgentLog rows for each run.
+]
+
+models_and_schemas.txt :
+
+[
+    # MODELS
+
+## Conversation (app/models/conversation.py)
+
+id: int
+user_id: int
+agent_name: str       # "manager", "creative_director", "publicist", "team"
+display_name: str     # user-facing label, can change any time
+created_at: datetime
+updated_at: datetime
+
+Relationships:
+- messages: List[Message]
+
+
+## Message (app/models/conversation.py or similar)
+
+id: int
+conversation_id: int
+sender: str           # "user" or agent_name
+content: str
+created_at: datetime
+
+
+## Project (app/models/project.py)
+
+id: int
+name: str
+description: str | None
+owner_id: int         # FK to User.id
+
+
+## Task (app/models/task.py)
+
+id: int
+title: str
+description: str | None
+is_completed: bool
+status: str           # default "pending"
+project_id: int | None
+user_id: int          # FK to User.id
+
+Relationships:
+- project: Project
+- owner: User
+- logs: List[AgentLog]   # via AgentLog.task backref
+
+
+## AgentLog (app/models/agent_log.py)
+
+id: int
+agent_name: str       # "manager", "creative_director", "publicist", "team", "artist_workflow"
+action: str           # e.g. "run", "chat"
+input_payload: str    # Text (typically JSON as string)
+output_result: str    # Text (typically JSON as string)
+timestamp: datetime
+task_id: int | None   # optional FK to Task.id
+
+Relationships:
+- task: Task
+
+
+## User (app/models/user.py)
+
+id: int
+email: str
+hashed_password: str
+created_at: datetime
+updated_at: datetime
+# (other auth/profile fields as in your codebase)
+]
