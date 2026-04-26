@@ -1,130 +1,255 @@
 import { Link } from 'react-router-dom'
 import { useCurrentUser } from '../hooks/useAuth'
 import { useProjects } from '../hooks/useProjects'
-import { useConversations } from '../hooks/useConversations'
-import { getApiError } from '../lib/apiError'
+import { useUserTasks } from '../hooks/useTasks'
+import type { Task } from '../types'
 
-function Skeleton({ className }: { className?: string }) {
-  return <span className={`inline-block rounded bg-gray-200 animate-pulse ${className}`} />
+const TYPE_BADGE: Record<string, string> = {
+  song: 'bg-indigo-100 text-indigo-700',
+  ep: 'bg-purple-100 text-purple-700',
+  album: 'bg-rose-100 text-rose-700',
+}
+
+function todayStr(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function tomorrowStr(): string {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 export default function DashboardPage() {
-  const {
-    data: user,
-    isLoading: loadingUser,
-    isError: userError,
-    error: userErrorObj,
-  } = useCurrentUser()
+  const { data: user } = useCurrentUser()
+  const { data: projects, isLoading } = useProjects()
+  const { data: allTasks = [] } = useUserTasks()
 
-  const { data: projects, isLoading: loadingProjects } = useProjects()
-  const { data: conversations, isLoading: loadingConvs } = useConversations()
+  const recent = projects?.slice(0, 3) ?? []
+  const projectCount = projects?.length ?? 0
+  const greeting = projectCount > 0 ? 'Welcome back' : 'Welcome'
+
+  const today = todayStr()
+  const tomorrow = tomorrowStr()
+
+  const pendingTasks = allTasks.filter((t) => t.status !== 'done')
+  const overdueTasks = pendingTasks.filter((t) => t.due_date && t.due_date < today)
+  const dueSoonTasks = pendingTasks.filter(
+    (t) => t.due_date && (t.due_date === today || t.due_date === tomorrow),
+  )
+
+  const upcomingTasks: Task[] = [...pendingTasks]
+    .sort((a, b) => {
+      if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date)
+      if (a.due_date) return -1
+      if (b.due_date) return 1
+      return 0
+    })
+    .slice(0, 3)
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
 
-      {/* ── Profile card (proof of real backend data) ───────────────────────── */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-6">
-        {loadingUser ? (
-          <div className="space-y-2">
-            <Skeleton className="h-6 w-40" />
-            <Skeleton className="h-4 w-56" />
-          </div>
-
-        ) : userError ? (
-          <div className="flex items-start gap-3">
-            <div className="flex-1">
-              <p className="font-semibold text-red-700">Could not load your profile</p>
-              <p className="text-sm text-red-500 mt-0.5">
-                {getApiError(userErrorObj, 'The server returned an error.')}
-              </p>
-              <p className="text-xs text-gray-400 mt-2">
-                Your token may have expired.{' '}
-                <Link to="/login" className="text-indigo-600 hover:underline">
-                  Sign in again
-                </Link>
-              </p>
-            </div>
-          </div>
-
-        ) : user ? (
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Welcome back, {user.username}
-              </h1>
-              <p className="text-sm text-gray-500 mt-0.5">{user.email}</p>
-            </div>
-            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-              user.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-            }`}>
-              {user.is_active ? 'Active' : 'Inactive'}
+      {/* ── Banners ── */}
+      {overdueTasks.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center justify-between">
+          <span className="text-sm text-red-700">
+            <span className="font-semibold">
+              {overdueTasks.length} overdue task{overdueTasks.length > 1 ? 's' : ''}
+            </span>{' '}
+            — don't let them slip.
+          </span>
+          <Link
+            to="/tasks"
+            className="text-xs text-red-600 font-medium hover:underline flex-shrink-0 ml-4"
+          >
+            View →
+          </Link>
+        </div>
+      )}
+      {dueSoonTasks.length > 0 && overdueTasks.length === 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center justify-between">
+          <span className="text-sm text-amber-700">
+            <span className="font-semibold">
+              {dueSoonTasks.length} task{dueSoonTasks.length > 1 ? 's' : ''} due within 2 days.
             </span>
-          </div>
+          </span>
+          <Link
+            to="/tasks"
+            className="text-xs text-amber-600 font-medium hover:underline flex-shrink-0 ml-4"
+          >
+            View →
+          </Link>
+        </div>
+      )}
 
-        ) : null}
-      </div>
+      {/* ── 2-column layout ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-      {/* ── Stats row ───────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Projects', value: projects?.length ?? '—' },
-          { label: 'Conversations', value: conversations?.length ?? '—' },
-          { label: 'Agent Runs', value: '—' },
-          { label: 'Log Entries', value: '—' },
-        ].map((stat) => (
-          <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">{stat.label}</p>
-            <p className="text-3xl font-bold text-gray-900 mt-1">
-              {loadingProjects || loadingConvs ? <span className="text-gray-300">…</span> : stat.value}
+        {/* Left: hero + projects */}
+        <div className="lg:col-span-2 space-y-5">
+
+          {/* Hero */}
+          <div className="bg-gradient-to-br from-indigo-50 via-white to-white rounded-2xl border border-indigo-100 px-8 py-10">
+            <p className="text-xs font-semibold text-indigo-500 uppercase tracking-widest mb-2">
+              RolloutRoom
             </p>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Recent projects ─────────────────────────────────────────────────── */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-gray-800">Recent Projects</h2>
-          <Link to="/projects" className="text-sm text-indigo-600 hover:underline">View all</Link>
-        </div>
-        {loadingProjects ? (
-          <p className="text-sm text-gray-400">Loading…</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {projects?.slice(0, 4).map((p) => (
-              <Link key={p.id} to={`/projects/${p.id}`}
-                className="bg-white rounded-xl border border-gray-200 p-4 hover:border-indigo-300 hover:shadow-sm transition">
-                <p className="font-medium text-gray-900">{p.name}</p>
-                <p className="text-sm text-gray-500 mt-1 line-clamp-1">{p.description}</p>
+            <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+              {greeting}, {user?.artist_name || user?.username || '…'}.
+            </h1>
+            <p className="text-gray-500 mt-2 text-base max-w-lg">
+              Your AI release team — Manager, Creative Director, and Publicist — ready to work on
+              each project.
+            </p>
+            <div className="flex gap-3 mt-6">
+              <Link
+                to="/projects"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-5 py-2.5 text-sm font-medium transition-colors"
+              >
+                + New project
               </Link>
-            ))}
+              <Link
+                to="/projects"
+                className="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 rounded-lg px-5 py-2.5 text-sm font-medium transition-colors"
+              >
+                View all projects
+              </Link>
+            </div>
           </div>
-        )}
-      </div>
 
-      {/* ── Recent chats ────────────────────────────────────────────────────── */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-gray-800">Recent Chats</h2>
-          <Link to="/chat" className="text-sm text-indigo-600 hover:underline">View all</Link>
-        </div>
-        {loadingConvs ? (
-          <p className="text-sm text-gray-400">Loading…</p>
-        ) : (
-          <ul className="space-y-2">
-            {conversations?.slice(0, 5).map((c) => (
-              <li key={c.id}>
-                <Link to={`/chat/${c.id}`}
-                  className="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-3 hover:border-indigo-300 transition">
-                  <span className="text-sm font-medium text-gray-800">{c.title}</span>
-                  <span className="text-xs text-gray-400">
-                    {new Date(c.updated_at).toLocaleDateString()}
-                  </span>
+          {/* Projects */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-gray-800">Your projects</h2>
+              {(projects?.length ?? 0) > 3 && (
+                <Link to="/projects" className="text-sm text-indigo-600 hover:underline">
+                  View all
                 </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+              )}
+            </div>
+
+            {isLoading ? (
+              <p className="text-sm text-gray-400">Loading…</p>
+            ) : recent.length === 0 ? (
+              <div className="bg-white rounded-xl border border-dashed border-gray-300 py-14 text-center">
+                <p className="text-gray-400 text-sm">No projects yet.</p>
+                <Link
+                  to="/projects"
+                  className="text-indigo-600 text-sm mt-2 inline-block hover:underline"
+                >
+                  Create your first project →
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {recent.map((p) => (
+                  <Link
+                    key={p.id}
+                    to={`/projects/${p.id}`}
+                    className="bg-white rounded-xl border border-gray-200 p-5 hover:border-indigo-300 hover:shadow-sm transition flex flex-col"
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <span
+                        className={`text-[11px] font-medium rounded-full px-2 py-0.5 capitalize ${
+                          TYPE_BADGE[p.project_type] ?? TYPE_BADGE.song
+                        }`}
+                      >
+                        {p.project_type || 'song'}
+                      </span>
+                    </div>
+                    <p className="font-semibold text-gray-900">{p.name}</p>
+                    {p.description && (
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">{p.description}</p>
+                    )}
+                    <div className="mt-1 space-y-0.5">
+                      {p.mood && (
+                        <p className="text-xs text-gray-400">
+                          <span className="font-medium text-gray-500">Mood:</span> {p.mood}
+                        </p>
+                      )}
+                      {p.goal && (
+                        <p className="text-xs text-gray-400">
+                          <span className="font-medium text-gray-500">Goal:</span> {p.goal}
+                        </p>
+                      )}
+                    </div>
+                    <div className="mt-auto pt-4">
+                      <span className="text-xs font-medium text-indigo-600">Open chat →</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right column */}
+        <div className="space-y-4">
+
+          {/* Upcoming tasks */}
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="px-4 py-3 border-b border-indigo-100 bg-indigo-50 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-indigo-700">Upcoming tasks</h3>
+              <Link to="/tasks" className="text-xs text-indigo-500 hover:underline">
+                All →
+              </Link>
+            </div>
+            <div className="px-4 py-3">
+              {upcomingTasks.length === 0 ? (
+                <p className="text-xs text-gray-400 py-3 text-center">No pending tasks yet.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {upcomingTasks.map((task) => {
+                    const overdue = task.due_date && task.due_date < today
+                    return (
+                      <li key={task.id} className="flex items-start gap-2.5">
+                        <span
+                          className={`flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full ${
+                            overdue ? 'bg-red-400' : 'bg-indigo-400'
+                          }`}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-800 leading-snug">{task.title}</p>
+                          {task.due_date && (
+                            <p
+                              className={`text-[10px] mt-0.5 ${
+                                overdue ? 'text-red-500 font-medium' : 'text-gray-400'
+                              }`}
+                            >
+                              Due {task.due_date}
+                            </p>
+                          )}
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          {/* How it works */}
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+              <h3 className="text-sm font-semibold text-gray-700">How it works</h3>
+            </div>
+            <div className="px-4 py-4 space-y-4">
+              {[
+                { num: '1', text: 'Create a project — song, EP, or album.' },
+                { num: '2', text: 'Chat with your AI Manager, Creative Director, or Publicist.' },
+                { num: '3', text: 'Turn advice into tasks and timelines.' },
+              ].map((step) => (
+                <div key={step.num} className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 text-[10px] font-bold flex items-center justify-center mt-0.5">
+                    {step.num}
+                  </span>
+                  <p className="text-xs text-gray-600 leading-relaxed">{step.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

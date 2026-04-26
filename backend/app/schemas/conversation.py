@@ -9,17 +9,18 @@ class ConversationBase(BaseModel):
 
 
 class ConversationCreate(ConversationBase):
-    pass
+    project_id: Optional[int] = None
 
 
 class ConversationResponse(ConversationBase):
     id: int
     user_id: int
+    project_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
 
     class Config:
-        from_attributes = True  # Pydantic v2 style
+        from_attributes = True
 
 
 class MessageResponse(BaseModel):

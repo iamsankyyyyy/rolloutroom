@@ -1,13 +1,74 @@
 export interface LoginRequest { username: string; password: string }
 export interface RegisterRequest { username: string; email: string; password: string }
 export interface TokenResponse { access_token: string; token_type: string }
-export interface User { id: number; username: string; email: string; is_active: boolean }
+
+export interface User {
+  id: number
+  username: string
+  email: string
+  is_active: boolean
+  artist_name: string | null
+  tone_preference: string | null
+}
+
+export interface UpdateUserRequest {
+  artist_name?: string | null
+  tone_preference?: string | null
+}
 
 export interface Project {
-  id: number; name: string; description: string
-  created_at: string; updated_at: string; owner_id: number
+  id: number
+  name: string
+  project_type: string
+  description: string | null
+  mood: string | null
+  goal: string | null
+  created_at: string
+  updated_at: string
+  owner_id: number
 }
-export interface CreateProjectRequest { name: string; description?: string }
+
+export interface CreateProjectRequest {
+  name: string
+  project_type: string
+  description?: string
+  mood?: string
+  goal?: string
+}
+
+export interface UpdateProjectRequest {
+  name?: string
+  project_type?: string
+  description?: string
+  mood?: string
+  goal?: string
+}
+
+export interface Task {
+  id: number
+  title: string
+  status: string
+  due_date: string | null
+  project_id: number
+  user_id: number
+  source: string | null
+  category: string | null
+}
+
+export interface CreateTaskRequest {
+  title: string
+  status?: string
+  due_date?: string | null
+  source?: string
+  category?: string
+}
+
+export interface UpdateTaskRequest {
+  title?: string
+  status?: string
+  due_date?: string | null
+  category?: string
+}
 
 export type MessageRole = 'user' | 'assistant' | 'system'
 export interface Message {

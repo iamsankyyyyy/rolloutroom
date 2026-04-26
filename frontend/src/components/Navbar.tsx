@@ -4,8 +4,7 @@ import { useLogout, useCurrentUser } from '../hooks/useAuth'
 const NAV_LINKS = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/projects', label: 'Projects' },
-  { to: '/chat', label: 'Chat' },
-  { to: '/logs', label: 'Logs' },
+  { to: '/tasks', label: 'Tasks' },
 ]
 
 export default function Navbar() {
@@ -26,7 +25,14 @@ export default function Navbar() {
         ))}
       </nav>
       <div className="flex items-center gap-3">
-        {user && <span className="text-sm text-gray-500 hidden sm:block">{user.username}</span>}
+        {user && (
+          <Link
+            to="/account"
+            className="text-sm text-gray-500 hover:text-indigo-600 transition-colors hidden sm:block"
+          >
+            {user.artist_name || user.username}
+          </Link>
+        )}
         <button onClick={logout} className="text-sm text-gray-500 hover:text-red-600 transition-colors">
           Sign out
         </button>

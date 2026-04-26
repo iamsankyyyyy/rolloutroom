@@ -10,11 +10,12 @@ class Conversation(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True)
 
-    # "manager", "creative_director", "publicist", "team"
+    # "manager" | "creative_director" | "publicist" | "team"
     agent_name = Column(String, nullable=False)
 
-    # optional: user-visible label, e.g. "Kelly" instead of "manager"
+    # optional user-visible label
     display_name = Column(String, nullable=True)
 
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -30,7 +31,7 @@ class Message(Base):
     id = Column(Integer, primary_key=True, index=True)
     conversation_id = Column(Integer, ForeignKey("conversations.id"), nullable=False)
 
-    # "user" or "manager"/"creative_director"/"publicist"/"team"
+    # "user" | "manager" | "creative_director" | "publicist" | "team"
     sender = Column(String, nullable=False)
 
     content = Column(Text, nullable=False)

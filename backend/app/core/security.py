@@ -2,8 +2,7 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 
-# Password hashing - use argon2 instead of bcrypt
-pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 SECRET_KEY = "your-super-secret-key"  # Replace with env variable
 ALGORITHM = "HS256"

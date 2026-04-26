@@ -1,23 +1,35 @@
+from typing import Optional
 from pydantic import BaseModel, EmailStr
+
 
 class UserBase(BaseModel):
     email: EmailStr
 
+
 class UserCreate(BaseModel):
     email: EmailStr
-    full_name: str
+    username: str
     password: str
+
+
+class UserUpdate(BaseModel):
+    artist_name: Optional[str] = None
+    tone_preference: Optional[str] = None
+
 
 class UserRead(BaseModel):
     id: int
     email: EmailStr
-    full_name: str
+    username: str
 
-class UserResponse(UserBase):
+
+class UserResponse(BaseModel):
     id: int
+    email: EmailStr
+    username: str
     is_active: bool
     is_superuser: bool
+    artist_name: Optional[str] = None
+    tone_preference: Optional[str] = None
 
-    model_config = {
-    "from_attributes": True
-}
+    model_config = {"from_attributes": True}

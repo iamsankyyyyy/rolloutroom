@@ -1,11 +1,6 @@
 import { apiClient } from './client'
-import type { LoginRequest, RegisterRequest, TokenResponse, User } from '../types'
+import type { LoginRequest, RegisterRequest, TokenResponse, User, UpdateUserRequest } from '../types'
 
-/**
- * POST /auth/login
- *
- * If your backend expects JSON instead of form data, we'll adjust this later.
- */
 export async function login(data: LoginRequest): Promise<TokenResponse> {
   const form = new URLSearchParams()
   form.append('username', data.username)
@@ -17,19 +12,17 @@ export async function login(data: LoginRequest): Promise<TokenResponse> {
   return res.data
 }
 
-/**
- * POST /auth/register
- * Sends JSON: { username, email, password }
- */
 export async function register(data: RegisterRequest): Promise<User> {
   const res = await apiClient.post<User>('/auth/register', data)
   return res.data
 }
 
-/**
- * GET /users/me
- */
 export async function getMe(): Promise<User> {
   const res = await apiClient.get<User>('/users/me')
+  return res.data
+}
+
+export async function updateMe(data: UpdateUserRequest): Promise<User> {
+  const res = await apiClient.patch<User>('/users/me', data)
   return res.data
 }
