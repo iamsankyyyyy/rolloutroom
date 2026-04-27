@@ -15,6 +15,12 @@ function todayStr(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+function tomorrowStr(): string {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 function weekEndStr(): string {
   const d = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -23,18 +29,22 @@ function weekEndStr(): string {
 function TaskRow({ task, onToggle }: { task: Task; onToggle: () => void }) {
   const isDone = task.status === 'done'
   const today = todayStr()
+  const tomorrow = tomorrowStr()
   const overdue = !isDone && !!task.due_date && task.due_date < today
   const dueToday = !isDone && !!task.due_date && task.due_date === today
+  const dueTomorrow = !isDone && !!task.due_date && task.due_date === tomorrow
 
   const rowBg = overdue
     ? 'bg-red-50 border-l-2 border-l-red-300'
     : dueToday
     ? 'bg-amber-50 border-l-2 border-l-amber-300'
+    : dueTomorrow
+    ? 'bg-yellow-50 border-l-2 border-l-yellow-200'
     : ''
 
   const sourceLabel =
-    task.source === 'manager_message' ? 'From Manager'
-    : task.source === 'agent_suggestion' ? 'Agent Suggestion'
+    task.source === 'manager_message' ? 'From chat'
+    : task.source === 'agent_suggestion' ? 'Suggestion'
     : 'Manual'
   const sourceStyle =
     task.source === 'manager_message' ? 'bg-indigo-50 text-indigo-500'
@@ -55,10 +65,19 @@ function TaskRow({ task, onToggle }: { task: Task; onToggle: () => void }) {
       </button>
       <div className="flex-1 min-w-0">
         <p className={`text-sm leading-snug ${isDone ? 'line-through text-gray-400' : 'text-gray-800'}`}>{task.title}</p>
-        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+          {overdue && (
+            <span className="text-[10px] font-semibold bg-red-100 text-red-600 rounded-full px-2 py-0.5">Overdue</span>
+          )}
+          {dueToday && (
+            <span className="text-[10px] font-semibold bg-amber-100 text-amber-700 rounded-full px-2 py-0.5">Due today</span>
+          )}
+          {dueTomorrow && (
+            <span className="text-[10px] font-semibold bg-yellow-100 text-yellow-700 rounded-full px-2 py-0.5">Due tomorrow</span>
+          )}
           {task.due_date && (
-            <span className={`text-xs ${overdue ? 'text-red-500 font-medium' : dueToday ? 'text-amber-600 font-medium' : 'text-gray-400'}`}>
-              Due {task.due_date}{overdue && ' · Overdue'}{dueToday && ' · Today'}
+            <span className={`text-xs ${overdue ? 'text-red-500 font-medium' : dueToday || dueTomorrow ? 'text-amber-600' : 'text-gray-400'}`}>
+              {task.due_date}
             </span>
           )}
           <span className={`text-[10px] rounded px-1.5 py-0.5 font-medium ${sourceStyle}`}>{sourceLabel}</span>
@@ -87,7 +106,12 @@ export default function TasksPage() {
   const [filterDue, setFilterDue] = useState<string>('all')
 
   const today = todayStr()
+  const tomorrow = tomorrowStr()
   const weekEnd = weekEndStr()
+
+  const overdueCount = allTasks.filter((t) => t.status !== 'done' && !!t.due_date && t.due_date < today).length
+  const dueTodayCount = allTasks.filter((t) => t.status !== 'done' && t.due_date === today).length
+  const dueTomorrowCount = allTasks.filter((t) => t.status !== 'done' && t.due_date === tomorrow).length
 
   const categoryFiltered = allTasks.filter((t) => (t.category ?? 'professional') === categoryTab)
 
@@ -99,6 +123,7 @@ export default function TasksPage() {
       if (!t.due_date) return false
       if (filterDue === 'overdue') return t.due_date < today
       if (filterDue === 'today') return t.due_date === today
+      if (filterDue === 'tomorrow') return t.due_date === tomorrow
       if (filterDue === 'week') return t.due_date >= today && t.due_date <= weekEnd
       return true
     })
@@ -125,10 +150,61 @@ export default function TasksPage() {
           <h1 className="text-2xl font-bold text-gray-900">Tasks</h1>
           <p className="text-sm text-gray-500 mt-1">
             All tasks across your projects —{' '}
-            <span className="text-gray-700 font-medium">{pendingCount} pending</span>, {doneCount} done.
+            <span className="text-gray-700 font-medium">{pendingCount} pending</span>, {doneCount} done
+            {overdueCount > 0 && (
+              <> · <span className="text-red-600 font-semibold">{overdueCount} overdue</span></>
+            )}
+            .
           </p>
         </div>
       </div>
+
+      {/* Deadline alert strip */}
+      {(overdueCount > 0 || dueTodayCount > 0 || dueTomorrowCount > 0) && (
+        <div className="flex flex-wrap gap-2">
+          {overdueCount > 0 && (
+            <button
+              onClick={() => setFilterDue('overdue')}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                filterDue === 'overdue' ? 'bg-red-600 text-white' : 'bg-red-100 text-red-700 hover:bg-red-200'
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-current inline-block" />
+              {overdueCount} Overdue
+            </button>
+          )}
+          {dueTodayCount > 0 && (
+            <button
+              onClick={() => setFilterDue('today')}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                filterDue === 'today' ? 'bg-amber-600 text-white' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-current inline-block" />
+              {dueTodayCount} Due today
+            </button>
+          )}
+          {dueTomorrowCount > 0 && (
+            <button
+              onClick={() => setFilterDue('tomorrow')}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                filterDue === 'tomorrow' ? 'bg-yellow-600 text-white' : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-current inline-block" />
+              {dueTomorrowCount} Due tomorrow
+            </button>
+          )}
+          {filterDue !== 'all' && (
+            <button
+              onClick={() => setFilterDue('all')}
+              className="rounded-full px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              Clear filter ×
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="flex border-b border-gray-200">
         {([
@@ -168,6 +244,7 @@ export default function TasksPage() {
           <option value="all">All dates</option>
           <option value="overdue">Overdue</option>
           <option value="today">Due today</option>
+          <option value="tomorrow">Due tomorrow</option>
           <option value="week">Due this week</option>
         </select>
       </div>
@@ -177,7 +254,7 @@ export default function TasksPage() {
       ) : allTasks.length === 0 ? (
         <div className="bg-white rounded-2xl border border-dashed border-gray-300 py-16 text-center">
           <p className="text-gray-400 text-sm">No tasks yet.</p>
-          <p className="text-gray-400 text-xs mt-1">Open a project and chat with your Manager — then hit <span className="font-medium text-indigo-400">+ Task</span> on any message.</p>
+          <p className="text-gray-400 text-xs mt-1">Open a project and chat with an agent — then hit <span className="font-medium text-indigo-400">+ Task</span> on any message.</p>
           <Link to="/projects" className="text-indigo-600 text-sm mt-3 inline-block hover:underline">Go to projects →</Link>
         </div>
       ) : filtered.length === 0 ? (

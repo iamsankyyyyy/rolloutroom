@@ -1,5 +1,6 @@
 import { Outlet, Navigate } from 'react-router-dom'
 import Navbar from './Navbar'
+import Footer from './Footer'
 
 export default function Layout() {
   const token = localStorage.getItem('access_token')
@@ -10,6 +11,7 @@ export default function Layout() {
       <main className="flex-1 max-w-5xl w-full mx-auto px-6 py-8">
         <Outlet />
       </main>
+      <Footer />
     </div>
   )
 }

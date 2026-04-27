@@ -8,7 +8,8 @@ import ProjectsPage from './pages/ProjectsPage'
 import ProjectDetailPage from './pages/ProjectDetailPage'
 import AccountPage from './pages/AccountPage'
 import TasksPage from './pages/TasksPage'
-import AgentDeskPage from './pages/AgentDeskPage'
+import AgentChatsPage from './pages/AgentChatsPage'
+import AgentChatIndexPage from './pages/AgentChatIndexPage'
 
 export const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
@@ -23,7 +24,9 @@ export const router = createBrowserRouter([
       { path: 'projects/:id', element: <ProjectDetailPage /> },
       { path: 'account', element: <AccountPage /> },
       { path: 'tasks', element: <TasksPage /> },
-      { path: 'agent-desk', element: <AgentDeskPage /> },
+      { path: 'agent-chats', element: <AgentChatsPage /> },
+      { path: 'agent-chats/:agentId', element: <AgentChatIndexPage /> },
+      { path: 'agent-desk', element: <Navigate to="/agent-chats" replace /> },
     ],
   },
   { path: '*', element: <Navigate to="/" replace /> },

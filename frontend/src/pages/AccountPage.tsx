@@ -91,9 +91,9 @@ export default function AccountPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Artist Profile & Settings</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Artist Account & Settings</h1>
         <p className="text-gray-500 text-sm mt-1">
-          Tell your team about you — they use this context to give better advice.
+          Manage your profile, preferences, and security — your team uses this context to give better advice.
         </p>
       </div>
 
@@ -105,7 +105,7 @@ export default function AccountPage() {
           </div>
           <div>
             <h2 className="text-sm font-semibold text-gray-800">Artist Profile</h2>
-            <p className="text-xs text-gray-400">Shared with your AI team as context</p>
+            <p className="text-xs text-gray-400">Shared with My Manager, Publicist, and Visual Artist as context</p>
           </div>
         </div>
         <form onSubmit={handleProfileSave} className="p-6 space-y-4">
@@ -150,7 +150,7 @@ export default function AccountPage() {
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
           <h2 className="text-sm font-semibold text-gray-800">Account Info</h2>
-          <p className="text-xs text-gray-400">Contact support to change email or username</p>
+          <p className="text-xs text-gray-400">Your login credentials — contact support to change email or username</p>
         </div>
         <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -164,11 +164,11 @@ export default function AccountPage() {
         </div>
       </div>
 
-      {/* Agent Preferences */}
+      {/* Preferences */}
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-          <h2 className="text-sm font-semibold text-gray-800">Agent Preferences</h2>
-          <p className="text-xs text-gray-400">How your AI team writes and speaks to you</p>
+          <h2 className="text-sm font-semibold text-gray-800">Preferences</h2>
+          <p className="text-xs text-gray-400">How your AI team (Manager, Publicist, Visual Artist) writes and speaks to you</p>
         </div>
         <form onSubmit={handlePrefSave} className="p-6 space-y-4">
           <div>
@@ -189,7 +189,7 @@ export default function AccountPage() {
       </div>
 
       {/* Security */}
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden" id="security">
         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
           <h2 className="text-sm font-semibold text-gray-800">Security</h2>
           <p className="text-xs text-gray-400">Change your login password</p>
@@ -222,6 +222,29 @@ export default function AccountPage() {
             {pwSaving ? 'Updating…' : 'Change password'}
           </button>
         </form>
+      </div>
+
+      {/* Danger Zone */}
+      <div className="bg-white rounded-2xl border border-red-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-red-100 bg-red-50">
+          <h2 className="text-sm font-semibold text-red-700">Danger Zone</h2>
+          <p className="text-xs text-red-400">Irreversible actions for your account</p>
+        </div>
+        <div className="p-6 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-gray-800">Delete account</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Permanently delete your account and all projects, tasks, and chat history. This cannot be undone.
+            </p>
+          </div>
+          <button
+            disabled
+            className="flex-shrink-0 border border-red-200 text-red-500 rounded-lg px-4 py-2 text-sm font-medium opacity-50 cursor-not-allowed"
+            title="Contact support to delete your account"
+          >
+            Delete account
+          </button>
+        </div>
       </div>
     </div>
   )
