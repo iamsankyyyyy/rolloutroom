@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()  # load backend/.env before any module reads os.environ
 
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -22,13 +23,21 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS — must be registered before any router includes
+# CORS — must be registered before any router includes.
+# Always allow local dev origins. On Render, set FRONTEND_URL env var to the
+# deployed static-site URL (e.g. https://rolloutroom-frontend.onrender.com)
+# so the browser preflight OPTIONS passes and JSON POSTs are not blocked.
+_allowed_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+_frontend_url = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
+if _frontend_url:
+    _allowed_origins.append(_frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
