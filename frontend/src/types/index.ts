@@ -9,11 +9,17 @@ export interface User {
   is_active: boolean
   artist_name: string | null
   tone_preference: string | null
+  genre: string | null
+  primary_platform: string | null
+  bio: string | null
 }
 
 export interface UpdateUserRequest {
   artist_name?: string | null
   tone_preference?: string | null
+  genre?: string | null
+  primary_platform?: string | null
+  bio?: string | null
 }
 
 export interface Project {
@@ -53,6 +59,7 @@ export interface Task {
   user_id: number
   source: string | null
   category: string | null
+  source_agent: string | null
 }
 
 export interface CreateTaskRequest {
@@ -61,6 +68,7 @@ export interface CreateTaskRequest {
   due_date?: string | null
   source?: string
   category?: string
+  source_agent?: string
 }
 
 export interface UpdateTaskRequest {
@@ -68,6 +76,7 @@ export interface UpdateTaskRequest {
   status?: string
   due_date?: string | null
   category?: string
+  source_agent?: string
 }
 
 export type MessageRole = 'user' | 'assistant' | 'system'

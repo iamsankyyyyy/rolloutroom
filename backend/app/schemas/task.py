@@ -9,6 +9,7 @@ class TaskCreate(BaseModel):
     project_id: int
     source: str = "manual"
     category: str = "professional"
+    source_agent: Optional[str] = None
 
 
 class TaskUpdate(BaseModel):
@@ -16,6 +17,7 @@ class TaskUpdate(BaseModel):
     status: Optional[str] = None
     due_date: Optional[str] = None
     category: Optional[str] = None
+    source_agent: Optional[str] = None
 
 
 class TaskResponse(BaseModel):
@@ -27,5 +29,6 @@ class TaskResponse(BaseModel):
     user_id: int
     source: Optional[str] = "manual"
     category: Optional[str] = "professional"
+    source_agent: Optional[str] = None
 
     model_config = {"from_attributes": True}

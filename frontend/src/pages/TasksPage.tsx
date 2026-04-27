@@ -32,8 +32,20 @@ function TaskRow({ task, onToggle }: { task: Task; onToggle: () => void }) {
     ? 'bg-amber-50 border-l-2 border-l-amber-300'
     : ''
 
-  const sourceLabel = task.source === 'manager_message' ? 'From Manager' : 'Manual'
-  const sourceStyle = task.source === 'manager_message' ? 'bg-indigo-50 text-indigo-500' : 'bg-gray-100 text-gray-400'
+  const sourceLabel =
+    task.source === 'manager_message' ? 'From Manager'
+    : task.source === 'agent_suggestion' ? 'Agent Suggestion'
+    : 'Manual'
+  const sourceStyle =
+    task.source === 'manager_message' ? 'bg-indigo-50 text-indigo-500'
+    : task.source === 'agent_suggestion' ? 'bg-violet-50 text-violet-500'
+    : 'bg-gray-100 text-gray-400'
+
+  const agentLabel =
+    task.source_agent === 'creative_director' ? 'Visual Artist'
+    : task.source_agent
+    ? task.source_agent.charAt(0).toUpperCase() + task.source_agent.slice(1)
+    : null
 
   return (
     <div className={`flex items-start gap-3 py-3 border-b border-gray-100 last:border-0 px-2 rounded ${rowBg}`}>
@@ -50,6 +62,11 @@ function TaskRow({ task, onToggle }: { task: Task; onToggle: () => void }) {
             </span>
           )}
           <span className={`text-[10px] rounded px-1.5 py-0.5 font-medium ${sourceStyle}`}>{sourceLabel}</span>
+          {agentLabel && (
+            <span className="text-[10px] rounded px-1.5 py-0.5 font-medium bg-fuchsia-50 text-fuchsia-500">
+              {agentLabel}
+            </span>
+          )}
         </div>
       </div>
       <span className={`flex-shrink-0 text-[10px] font-medium rounded-full px-2 py-0.5 mt-0.5 ${isDone ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
@@ -103,7 +120,6 @@ export default function TasksPage() {
 
   return (
     <div className="space-y-5">
-
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Tasks</h1>
@@ -114,7 +130,6 @@ export default function TasksPage() {
         </div>
       </div>
 
-      {/* Category tabs */}
       <div className="flex border-b border-gray-200">
         {([
           { value: 'professional', label: 'Professional', count: professionalPending },
@@ -134,14 +149,12 @@ export default function TasksPage() {
         ))}
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <select value={filterProject} onChange={(e) => setFilterProject(e.target.value)}
           className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-700">
           <option value="all">All projects</option>
           {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
-
         <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
           {[{ value: 'all', label: 'All' }, { value: 'pending', label: 'Pending' }, { value: 'done', label: 'Done' }].map((opt) => (
             <button key={opt.value} onClick={() => setFilterStatus(opt.value)}
@@ -150,7 +163,6 @@ export default function TasksPage() {
             </button>
           ))}
         </div>
-
         <select value={filterDue} onChange={(e) => setFilterDue(e.target.value)}
           className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-700">
           <option value="all">All dates</option>
@@ -184,8 +196,7 @@ export default function TasksPage() {
               <div className="px-3">
                 {tasks.map((task) => (
                   <TaskRow key={task.id} task={task}
-                    onToggle={() => toggleDirect({ taskId: task.id, data: { status: task.status === 'done' ? 'pending' : 'done' }, projectId: task.project_id })}
-                  />
+                    onToggle={() => toggleDirect({ taskId: task.id, data: { status: task.status === 'done' ? 'pending' : 'done' }, projectId: task.project_id })} />
                 ))}
               </div>
             </div>

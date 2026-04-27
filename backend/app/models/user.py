@@ -16,6 +16,9 @@ class User(Base):
 
     artist_name = Column(String, nullable=True)
     tone_preference = Column(String, nullable=True, default="balanced", server_default="balanced")
+    genre = Column(String, nullable=True)
+    primary_platform = Column(String, nullable=True)
+    bio = Column(String, nullable=True)
 
     tasks = relationship("Task", back_populates="owner")
     projects = relationship("Project", back_populates="owner")

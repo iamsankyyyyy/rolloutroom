@@ -13,6 +13,7 @@ def create_task(db: Session, task: TaskCreate, user_id: int) -> Task:
         user_id=user_id,
         source=task.source,
         category=task.category,
+        source_agent=task.source_agent,
     )
     db.add(db_task)
     db.commit()

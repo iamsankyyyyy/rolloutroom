@@ -20,8 +20,6 @@ router = APIRouter(prefix="/projects", tags=["Projects"])
 _VALID_CHANNELS = {"group", "manager", "creative_director", "publicist"}
 
 
-# ── Pydantic schemas ──────────────────────────────────────────────────────────
-
 class PlanResponse(BaseModel):
     conversation_id: int
     plan: str
@@ -56,6 +54,7 @@ class TaskBody(BaseModel):
     due_date: Optional[str] = None
     source: str = "manual"
     category: str = "professional"
+    source_agent: Optional[str] = None
 
 
 class TaskUpdateBody(BaseModel):
@@ -63,9 +62,8 @@ class TaskUpdateBody(BaseModel):
     status: Optional[str] = None
     due_date: Optional[str] = None
     category: Optional[str] = None
+    source_agent: Optional[str] = None
 
-
-# ── Shared helpers ─────────────────────────────────────────────────────────────
 
 def _get_or_create_conversation(
     db: Session, project_id: int, user_id: int, project_name: str, channel: str
@@ -177,8 +175,6 @@ def _build_rollout_prompt(project) -> str:
     return "\n".join(parts)
 
 
-# ── Project CRUD ──────────────────────────────────────────────────────────────
-
 @router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 def create_project_endpoint(
     project: ProjectCreate,
@@ -221,8 +217,6 @@ def update_project_endpoint(
     return project_crud.update_project(db, project, data)
 
 
-# ── Task endpoints ────────────────────────────────────────────────────────────
-
 @router.get("/{project_id}/tasks", response_model=List[TaskResponse])
 def list_project_tasks(
     project_id: int,
@@ -251,7 +245,8 @@ def create_project_task(
         due_date=body.due_date,
         project_id=project_id,
         source=body.source,
-        category=body.category
+        category=body.category,
+        source_agent=body.source_agent,
     )
     return task_crud.create_task(db, task_in, current_user.id)
 
@@ -283,8 +278,6 @@ def delete_project_task(
         raise HTTPException(status_code=404, detail="Task not found")
     return task_crud.delete_task(db, task_id)
 
-
-# ── Plan endpoints ─────────────────────────────────────────────────────────────
 
 @router.get("/{project_id}/plan", response_model=PlanResponse)
 def get_latest_plan(
@@ -340,8 +333,6 @@ async def plan_project_rollout(
 
     return PlanResponse(conversation_id=conv.id, plan=plan_text)
 
-
-# ── Chat endpoints ────────────────────────────────────────────────────────────
 
 @router.get("/{project_id}/chat", response_model=ChatHistoryResponse)
 def get_project_chat(
@@ -418,8 +409,6 @@ async def send_project_chat(
 
     return ChatReplyResponse(messages=new_messages)
 
-
-# ── Delete ────────────────────────────────────────────────────────────────────
 
 @router.delete("/{project_id}", response_model=ProjectResponse)
 def delete_project_endpoint(

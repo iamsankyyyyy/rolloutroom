@@ -15,6 +15,9 @@ class UserCreate(BaseModel):
 class UserUpdate(BaseModel):
     artist_name: Optional[str] = None
     tone_preference: Optional[str] = None
+    genre: Optional[str] = None
+    primary_platform: Optional[str] = None
+    bio: Optional[str] = None
 
 
 class UserRead(BaseModel):
@@ -31,5 +34,8 @@ class UserResponse(BaseModel):
     is_superuser: bool
     artist_name: Optional[str] = None
     tone_preference: Optional[str] = None
+    genre: Optional[str] = None
+    primary_platform: Optional[str] = None
+    bio: Optional[str] = None
 
     model_config = {"from_attributes": True}

@@ -15,6 +15,7 @@ class Task(Base):
     due_date = Column(String, nullable=True)
     source = Column(String, nullable=True, default="manual", server_default="manual")
     category = Column(String, nullable=True, default="professional", server_default="professional")
+    source_agent = Column(String, nullable=True)
 
     project_id = Column(Integer, ForeignKey("projects.id"))
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)

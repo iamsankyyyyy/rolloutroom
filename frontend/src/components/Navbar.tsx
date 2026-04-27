@@ -5,6 +5,7 @@ const NAV_LINKS = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/projects', label: 'Projects' },
   { to: '/tasks', label: 'Tasks' },
+  { to: '/agent-desk', label: 'Agent Desk' },
 ]
 
 export default function Navbar() {
@@ -26,10 +27,7 @@ export default function Navbar() {
       </nav>
       <div className="flex items-center gap-3">
         {user && (
-          <Link
-            to="/account"
-            className="text-sm text-gray-500 hover:text-indigo-600 transition-colors hidden sm:block"
-          >
+          <Link to="/account" className="text-sm text-gray-500 hover:text-indigo-600 transition-colors hidden sm:block">
             {user.artist_name || user.username}
           </Link>
         )}

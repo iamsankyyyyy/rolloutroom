@@ -1,14 +1,21 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
+from pydantic import BaseModel
 
 from app.database.session import get_db
 from app.schemas.user import UserCreate, UserUpdate, UserResponse
 from app.crud import users as user_crud
 from app.core.dependencies import get_current_user
+from app.core.security import verify_password, hash_password
 from app.models.user import User
 
 router = APIRouter(prefix="/users", tags=["Users"])
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
 
 
 # /me must come before /{user_id} so FastAPI doesn't try to cast "me" as an int
@@ -24,6 +31,18 @@ def update_me(
     db: Session = Depends(get_db),
 ):
     return user_crud.update_user_profile(db, current_user, data)
+
+
+@router.post("/me/change-password", status_code=status.HTTP_204_NO_CONTENT)
+def change_password(
+    data: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not verify_password(data.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    current_user.hashed_password = hash_password(data.new_password)
+    db.commit()
 
 
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
