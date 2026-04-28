@@ -125,7 +125,6 @@ export default function AgentChatsPage() {
   const [showToast, setShowToast] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
 
-  // Per-agent display name (localStorage-backed)
   const [agentNames, setAgentNames] = useState<Record<AgentId, string>>(() => ({
     manager: getStoredName('manager'),
     publicist: getStoredName('publicist'),
@@ -135,7 +134,6 @@ export default function AgentChatsPage() {
   const [editNameValue, setEditNameValue] = useState('')
   const editInputRef = useRef<HTMLInputElement>(null)
 
-  // New-project inline form
   const [showNewProject, setShowNewProject] = useState(false)
   const [newProjName, setNewProjName] = useState('')
   const [newProjType, setNewProjType] = useState<'song' | 'ep' | 'album'>('song')
@@ -144,10 +142,7 @@ export default function AgentChatsPage() {
   const agent = AGENTS.find((a) => a.id === selectedAgent)!
   const displayName = agentNames[selectedAgent]
 
-  // Tasks for the selected project (shown in right panel)
   const { data: projectTasks = [] } = useProjectTasks(Number(projectId) || 0)
-
-  // Selected project object (for display)
   const selectedProject = projects.find((p) => String(p.id) === projectId)
 
   useEffect(() => {
@@ -271,8 +266,8 @@ export default function AgentChatsPage() {
         </p>
       </div>
 
-      {/* Agent selector cards — click body to select, "View all chats" link to index */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Agent selector cards — horizontal scroll on mobile, 3-col on md+ */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
         {AGENTS.map((ag) => {
           const name = agentNames[ag.id]
           const isSelected = selectedAgent === ag.id
@@ -288,14 +283,14 @@ export default function AgentChatsPage() {
                   setChecked(new Set())
                 }
               }}
-              className={`relative p-5 rounded-2xl border-2 transition-all cursor-pointer select-none flex flex-col ${
+              className={`relative p-4 sm:p-5 rounded-2xl border-2 transition-all cursor-pointer select-none flex flex-col ${
                 isSelected
                   ? ag.colorClass.selectedCard + ' shadow-sm'
                   : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
               }`}
             >
               {/* Name row + rename pencil */}
-              <div className="flex items-center gap-1.5 mb-2">
+              <div className="flex items-center gap-1.5 mb-1.5">
                 {isEditingThis ? (
                   <input
                     ref={editInputRef}
@@ -341,9 +336,10 @@ export default function AgentChatsPage() {
               </div>
 
               <p className="text-xs font-semibold text-gray-700">{ag.tagline}</p>
-              <p className="text-xs text-gray-500 mt-1.5 leading-relaxed flex-1">{ag.description}</p>
+              {/* Description hidden on mobile to keep cards compact */}
+              <p className="hidden sm:block text-xs text-gray-500 mt-1.5 leading-relaxed flex-1">{ag.description}</p>
 
-              {/* "View all chats" link — navigates to index page */}
+              {/* "View all chats" link */}
               <div
                 className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between"
                 onClick={(e) => e.stopPropagation()}
@@ -360,13 +356,13 @@ export default function AgentChatsPage() {
         })}
       </div>
 
-      {/* Two-column layout: left = chat, right = tasks panel + continue CTA */}
+      {/* Two-column layout: left = chat, right = tasks/CTA — stacks on mobile */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-start">
         {/* ── LEFT: brief form + typing + response + turn-into-tasks ── */}
         <div className="lg:col-span-3 space-y-4">
           {/* Brief form */}
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div className={`px-5 py-3.5 border-b flex items-center gap-2 ${agent.colorClass.header}`}>
+            <div className={`px-4 sm:px-5 py-3.5 border-b flex items-center gap-2 ${agent.colorClass.header}`}>
               <span className={`text-[11px] font-semibold rounded-full px-2 py-0.5 ${agent.colorClass.badge}`}>
                 {displayName}
               </span>
@@ -376,7 +372,7 @@ export default function AgentChatsPage() {
               </span>
             </div>
 
-            <div className="p-5 space-y-4">
+            <div className="p-4 sm:p-5 space-y-4">
               {/* Project selector */}
               <div>
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
@@ -385,7 +381,7 @@ export default function AgentChatsPage() {
                 <select
                   value={showNewProject ? '__new__' : projectId}
                   onChange={(e) => handleProjectChange(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base md:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="">Select a project…</option>
                   {projects.map((p) => (
@@ -408,12 +404,12 @@ export default function AgentChatsPage() {
                       onChange={(e) => setNewProjName(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') handleCreateProject() }}
                       placeholder="Project name…"
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="border border-gray-300 rounded-lg px-3 py-2.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                     <select
                       value={newProjType}
                       onChange={(e) => setNewProjType(e.target.value as 'song' | 'ep' | 'album')}
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="border border-gray-300 rounded-lg px-3 py-2.5 text-base md:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     >
                       <option value="song">Song</option>
                       <option value="ep">EP</option>
@@ -424,13 +420,13 @@ export default function AgentChatsPage() {
                     <button
                       onClick={handleCreateProject}
                       disabled={creatingProject || !newProjName.trim()}
-                      className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-lg px-4 py-1.5 text-xs font-semibold transition-colors"
+                      className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
                     >
                       {creatingProject ? 'Creating…' : 'Create & select'}
                     </button>
                     <button
                       onClick={() => { setShowNewProject(false); setNewProjName('') }}
-                      className="text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5 transition-colors"
+                      className="text-sm text-gray-500 hover:text-gray-700 px-3 py-2 transition-colors"
                     >
                       Cancel
                     </button>
@@ -451,7 +447,7 @@ export default function AgentChatsPage() {
                   }}
                   rows={4}
                   placeholder={agent.examplePrompt}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
                 />
                 <p className="text-[10px] text-gray-400 mt-1">⌘/Ctrl + Enter to send</p>
               </div>
@@ -459,7 +455,7 @@ export default function AgentChatsPage() {
               <button
                 onClick={handleSend}
                 disabled={isTyping || !projectId || !message.trim()}
-                className={`px-5 py-2 rounded-lg text-sm font-medium text-white transition-colors disabled:opacity-40 ${agent.colorClass.btn}`}
+                className={`w-full sm:w-auto px-5 py-3 sm:py-2 rounded-lg text-sm font-medium text-white transition-colors disabled:opacity-40 ${agent.colorClass.btn}`}
               >
                 {isTyping ? 'Waiting for reply…' : `Send to ${displayName} →`}
               </button>
@@ -469,7 +465,7 @@ export default function AgentChatsPage() {
           {/* Sent message echo */}
           {(isTyping || response) && sentMessage && (
             <div className="flex justify-end">
-              <div className="max-w-[80%] bg-gray-100 text-gray-800 rounded-2xl rounded-br-sm px-4 py-3 text-sm leading-relaxed">
+              <div className="max-w-[85%] sm:max-w-[80%] bg-gray-100 text-gray-800 rounded-2xl rounded-br-sm px-4 py-3 text-sm leading-relaxed">
                 {sentMessage}
               </div>
             </div>
@@ -485,13 +481,13 @@ export default function AgentChatsPage() {
           {/* Agent response */}
           {response && !isTyping && (
             <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-              <div className={`px-5 py-3 border-b flex items-center gap-2 ${agent.colorClass.header}`}>
+              <div className={`px-4 sm:px-5 py-3 border-b flex items-center gap-2 ${agent.colorClass.header}`}>
                 <span className={`text-[11px] font-semibold rounded-full px-2 py-0.5 ${agent.colorClass.badge}`}>
                   {displayName}
                 </span>
                 <span className="text-xs text-gray-400">replied</span>
               </div>
-              <div className="px-5 py-5">
+              <div className="px-4 sm:px-5 py-5">
                 <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
                   {response.content}
                 </p>
@@ -502,18 +498,18 @@ export default function AgentChatsPage() {
           {/* Turn this into tasks */}
           {suggestions.length > 0 && !isTyping && (
             <div className="bg-white rounded-2xl border-2 border-indigo-200 overflow-hidden">
-              <div className="px-5 py-3 border-b border-indigo-100 bg-indigo-50">
+              <div className="px-4 sm:px-5 py-3 border-b border-indigo-100 bg-indigo-50">
                 <h3 className="text-sm font-semibold text-indigo-800">Turn this into tasks</h3>
                 <p className="text-xs text-indigo-500 mt-0.5">
                   Select suggestions to add to your task list
                 </p>
               </div>
 
-              <div className="px-5 py-1 divide-y divide-gray-50">
+              <div className="px-4 sm:px-5 py-1 divide-y divide-gray-50">
                 {suggestions.map((sug, i) => (
                   <label
                     key={i}
-                    className="flex items-start gap-3 py-2.5 cursor-pointer hover:bg-gray-50 -mx-5 px-5 transition-colors"
+                    className="flex items-start gap-3 py-3 cursor-pointer hover:bg-gray-50 -mx-4 sm:-mx-5 px-4 sm:px-5 transition-colors"
                   >
                     <input
                       type="checkbox"
@@ -528,17 +524,17 @@ export default function AgentChatsPage() {
                 ))}
               </div>
 
-              <div className="px-5 py-4 border-t border-indigo-100 bg-indigo-50/60 flex flex-wrap items-center gap-3">
+              <div className="px-4 sm:px-5 py-4 border-t border-indigo-100 bg-indigo-50/60 flex flex-wrap items-center gap-3">
                 <button
                   onClick={handleSaveTasks}
                   disabled={savingTasks || checked.size === 0}
-                  className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-lg px-5 py-2 text-sm font-semibold transition-colors"
+                  className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-lg px-5 py-2.5 sm:py-2 text-sm font-semibold transition-colors"
                 >
                   {savingTasks
                     ? 'Adding…'
                     : checked.size === 0
                     ? 'Select tasks above'
-                    : `Add ${checked.size} selected task${checked.size !== 1 ? 's' : ''} to my list`}
+                    : `Add ${checked.size} task${checked.size !== 1 ? 's' : ''} to my list`}
                 </button>
                 <button
                   onClick={() => setChecked(new Set(suggestions.map((_, i) => i)))}
@@ -556,7 +552,7 @@ export default function AgentChatsPage() {
 
               {/* Success toast */}
               {showToast && (
-                <div className="mx-5 mb-4 bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center justify-between">
+                <div className="mx-4 sm:mx-5 mb-4 bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center justify-between">
                   <span className="text-sm text-green-700 font-medium">
                     {savedCount} task{savedCount !== 1 ? 's' : ''} added to your Tasks list.
                   </span>
@@ -572,10 +568,8 @@ export default function AgentChatsPage() {
           )}
         </div>
 
-        {/* ── RIGHT: tasks panel + "Continue in project chat" CTA ── */}
+        {/* ── RIGHT: "Continue in project chat" CTA + tasks panel ── */}
         <div className="lg:col-span-2 space-y-3">
-
-          {/* Continue in project chat — shown whenever a project is selected */}
           {projectId && selectedProject && (
             <div className="bg-white rounded-2xl border-2 border-indigo-300 overflow-hidden">
               <div className="px-4 py-4">
@@ -589,7 +583,7 @@ export default function AgentChatsPage() {
                 </p>
                 <button
                   onClick={() => navigate(`/projects/${projectId}?agent=${selectedAgent}`)}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-4 py-3 text-sm font-semibold transition-colors flex items-center justify-center gap-2"
                 >
                   Continue in project chat →
                 </button>
@@ -609,10 +603,7 @@ export default function AgentChatsPage() {
                 <p className="text-[10px] text-gray-400 mt-0.5">Populated from agent suggestions</p>
               </div>
               {projectId && projectTasks.length > 0 && (
-                <Link
-                  to="/tasks"
-                  className="text-xs text-indigo-500 hover:underline flex-shrink-0 ml-3"
-                >
+                <Link to="/tasks" className="text-xs text-indigo-500 hover:underline flex-shrink-0 ml-3">
                   View all →
                 </Link>
               )}
@@ -627,7 +618,7 @@ export default function AgentChatsPage() {
                 <p className="text-sm font-medium text-gray-500">No tasks yet.</p>
                 <p className="text-xs text-gray-400 leading-relaxed max-w-[200px] mx-auto">
                   Chat with your agent and click{' '}
-                  <span className="font-semibold text-indigo-500">"Add selected tasks to my list"</span>{' '}
+                  <span className="font-semibold text-indigo-500">"Add tasks to my list"</span>{' '}
                   to send suggestions here.
                 </p>
               </div>

@@ -85,24 +85,26 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* 2-column layout */}
+      {/* 2-column layout — stacks on mobile */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         {/* Left */}
         <div className="lg:col-span-2 space-y-5">
-          <div className="bg-gradient-to-br from-indigo-50 via-white to-white rounded-2xl border border-indigo-100 px-8 py-10">
+          {/* Hero card — tighter padding on mobile */}
+          <div className="bg-gradient-to-br from-indigo-50 via-white to-white rounded-2xl border border-indigo-100 px-4 py-7 sm:px-8 sm:py-10">
             <p className="text-xs font-semibold text-indigo-500 uppercase tracking-widest mb-2">RolloutRoom</p>
-            <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
               {greeting}, {user?.artist_name || user?.username || '…'}.
             </h1>
-            <p className="text-gray-500 mt-2 text-base max-w-lg">
+            <p className="text-gray-500 mt-2 text-sm sm:text-base max-w-lg">
               Your AI release team — Manager, Creative Director, and Publicist — ready to work on each project.
             </p>
-            <div className="flex gap-3 mt-6">
-              <Link to="/projects" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-5 py-2.5 text-sm font-medium transition-colors">
+            {/* CTA buttons stack vertically on mobile */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-5 sm:mt-6">
+              <Link to="/projects" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-5 py-2.5 text-sm font-medium transition-colors text-center">
                 + New project
               </Link>
-              <Link to="/agent-chats" className="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 rounded-lg px-5 py-2.5 text-sm font-medium transition-colors">
+              <Link to="/agent-chats" className="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 rounded-lg px-5 py-2.5 text-sm font-medium transition-colors text-center">
                 Open Agent Chats
               </Link>
             </div>
@@ -126,7 +128,7 @@ export default function DashboardPage() {
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {recent.map((p) => (
                   <Link key={p.id} to={`/projects/${p.id}`}
                     className="bg-white rounded-xl border border-gray-200 p-5 hover:border-indigo-300 hover:shadow-sm transition flex flex-col">
@@ -151,7 +153,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Right */}
+        {/* Right sidebar */}
         <div className="space-y-4">
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
             <div className="px-4 py-3 border-b border-indigo-100 bg-indigo-50 flex items-center justify-between">
@@ -224,57 +226,57 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Stats strip */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Today's tasks</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1 tabular-nums">
-            {todayDone}<span className="text-base font-normal text-gray-400">/{todayTasks.length}</span>
+      {/* Stats strip — tighter gap on mobile */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
+          <p className="text-[10px] sm:text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Today</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 tabular-nums">
+            {todayDone}<span className="text-sm sm:text-base font-normal text-gray-400">/{todayTasks.length}</span>
           </p>
-          <p className="text-xs text-gray-400 mt-0.5">due today, done</p>
+          <p className="text-[10px] text-gray-400 mt-0.5 hidden sm:block">due today, done</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">This week</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1 tabular-nums">
-            {weekDone}<span className="text-base font-normal text-gray-400">/{weekTasks.length}</span>
+        <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
+          <p className="text-[10px] sm:text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Week</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 tabular-nums">
+            {weekDone}<span className="text-sm sm:text-base font-normal text-gray-400">/{weekTasks.length}</span>
           </p>
-          <p className="text-xs text-gray-400 mt-0.5">tasks in 7 days, done</p>
+          <p className="text-[10px] text-gray-400 mt-0.5 hidden sm:block">tasks in 7 days, done</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Next focus</p>
+        <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
+          <p className="text-[10px] sm:text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Next</p>
           {nextFocus ? (
             <>
-              <p className="text-sm font-semibold text-gray-800 mt-1 leading-snug line-clamp-2">{nextFocus.title}</p>
-              {nextFocus.due_date && <p className="text-xs text-gray-400 mt-0.5">Due {nextFocus.due_date}</p>}
+              <p className="text-xs font-semibold text-gray-800 mt-1 leading-snug line-clamp-2">{nextFocus.title}</p>
+              {nextFocus.due_date && <p className="text-[10px] text-gray-400 mt-0.5">{nextFocus.due_date}</p>}
             </>
           ) : (
-            <p className="text-sm text-gray-400 mt-1">All clear</p>
+            <p className="text-xs text-gray-400 mt-1">All clear</p>
           )}
         </div>
       </div>
 
       {/* ── Dashboard-only expanded footer ── */}
       <div className="rounded-2xl overflow-hidden border border-gray-200 mt-6">
-        {/* Dark hero band */}
-        <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-indigo-950 text-white px-8 py-10">
+        {/* Dark hero band — tighter padding on mobile */}
+        <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-indigo-950 text-white px-5 py-8 sm:px-8 sm:py-10">
           <p className="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-2">About RolloutRoom</p>
-          <h2 className="text-xl font-bold leading-snug max-w-lg">
+          <h2 className="text-lg sm:text-xl font-bold leading-snug max-w-lg">
             A full AI release team in your pocket — built for solo artists who don't have a label.
           </h2>
           <p className="text-sm text-gray-400 mt-3 max-w-xl leading-relaxed">
             RolloutRoom gives every independent artist access to the kind of strategic, creative, and promotional support
             that major-label acts take for granted. No agency fees. No waiting on emails.
           </p>
-          <div className="flex gap-3 mt-6">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-5 sm:mt-6">
             <Link
               to="/projects"
-              className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors"
+              className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors text-center"
             >
               Start a project
             </Link>
             <Link
               to="/agent-chats"
-              className="bg-white/10 hover:bg-white/20 text-white rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors"
+              className="bg-white/10 hover:bg-white/20 text-white rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors text-center"
             >
               Meet your agents
             </Link>
@@ -283,8 +285,7 @@ export default function DashboardPage() {
 
         {/* Three-column info grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100 bg-white">
-
-          <div className="px-6 py-8">
+          <div className="px-5 sm:px-6 py-7 sm:py-8">
             <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">For solo artists</h4>
             <ul className="space-y-3">
               {[
@@ -300,7 +301,7 @@ export default function DashboardPage() {
             </ul>
           </div>
 
-          <div className="px-6 py-8">
+          <div className="px-5 sm:px-6 py-7 sm:py-8">
             <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Your AI team</h4>
             <div className="space-y-3">
               <div>
@@ -318,7 +319,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="px-6 py-8">
+          <div className="px-5 sm:px-6 py-7 sm:py-8">
             <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Project workflow</h4>
             <div className="space-y-3">
               {[

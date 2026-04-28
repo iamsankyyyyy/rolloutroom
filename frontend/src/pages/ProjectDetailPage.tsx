@@ -98,6 +98,9 @@ export default function ProjectDetailPage() {
   const [taskPanelFlash, setTaskPanelFlash] = useState(false)
   const prevTasksLen = useRef<number | null>(null)
 
+  // Mobile: toggle between chat and tasks panels
+  const [mobileTab, setMobileTab] = useState<'chat' | 'tasks'>('chat')
+
   const bottomRef = useRef<HTMLDivElement>(null)
   const tasksPanelRef = useRef<HTMLDivElement>(null)
 
@@ -210,18 +213,18 @@ export default function ProjectDetailPage() {
 
   const editForm = (
     <form onSubmit={handleSaveEdit} className="space-y-2.5">
-      <input className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Title" value={editName} onChange={(e) => setEditName(e.target.value)} required />
-      <select className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white" value={editType} onChange={(e) => setEditType(e.target.value)}>
+      <input className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Title" value={editName} onChange={(e) => setEditName(e.target.value)} required />
+      <select className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white" value={editType} onChange={(e) => setEditType(e.target.value)}>
         <option value="song">Song</option>
         <option value="ep">EP</option>
         <option value="album">Album</option>
       </select>
-      <textarea className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" rows={2} placeholder="Description" value={editDesc} onChange={(e) => setEditDesc(e.target.value)} />
-      <input className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Mood / Theme" value={editMood} onChange={(e) => setEditMood(e.target.value)} />
-      <input className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Primary Goal" value={editGoal} onChange={(e) => setEditGoal(e.target.value)} />
+      <textarea className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" rows={2} placeholder="Description" value={editDesc} onChange={(e) => setEditDesc(e.target.value)} />
+      <input className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Mood / Theme" value={editMood} onChange={(e) => setEditMood(e.target.value)} />
+      <input className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Primary Goal" value={editGoal} onChange={(e) => setEditGoal(e.target.value)} />
       <div className="flex gap-2 pt-1">
-        <button type="submit" disabled={saving} className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg px-3 py-1.5 text-xs font-medium transition-colors">{saving ? 'Saving…' : 'Save'}</button>
-        <button type="button" onClick={() => setEditing(false)} className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
+        <button type="submit" disabled={saving} className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg px-3 py-2 text-xs font-medium transition-colors">{saving ? 'Saving…' : 'Save'}</button>
+        <button type="button" onClick={() => setEditing(false)} className="px-3 py-2 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
       </div>
     </form>
   )
@@ -230,16 +233,16 @@ export default function ProjectDetailPage() {
     <div className="flex flex-col h-[calc(100vh-64px)]">
 
       {/* Header */}
-      <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 pt-3 pb-0">
+      <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 sm:px-6 pt-3 pb-0">
         <Link to="/projects" className="text-xs text-indigo-600 hover:underline">← Projects</Link>
         <div className="flex items-center gap-2 mt-1">
           <span className={`text-[11px] font-medium rounded-full px-2 py-0.5 capitalize ${typeBadgeClass}`}>{project.project_type || 'song'}</span>
-          <h1 className="text-base font-bold text-gray-900">{project.name}</h1>
+          <h1 className="text-base font-bold text-gray-900 truncate">{project.name}</h1>
         </div>
         <div className="flex mt-3 -mb-px">
           {CHANNEL_OPTIONS.map((opt) => (
             <button key={opt.value} onClick={() => setActiveChannel(opt.value)}
-              className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors ${
+              className={`px-3 sm:px-4 py-2.5 text-xs font-medium border-b-2 transition-colors ${
                 activeChannel === opt.value ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
@@ -249,282 +252,309 @@ export default function ProjectDetailPage() {
         </div>
       </div>
 
-      {/* Body */}
-      <div className="flex-1 flex min-h-0 bg-slate-50">
+      {/* Body — flex-col to stack mobile tab bar above the content row */}
+      <div className="flex-1 flex flex-col min-h-0 bg-slate-50">
 
-        {/* Left sidebar: overview — lg+ */}
-        <div className="hidden lg:flex w-60 xl:w-72 flex-shrink-0 border-r border-gray-200 bg-white flex-col overflow-y-auto">
-          <div className="p-4 flex-1">
-            {!editing ? (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Overview</h3>
-                  <button onClick={openEdit} className="text-xs text-indigo-600 hover:underline">Edit</button>
-                </div>
-                {project.description && <p className="text-xs text-gray-700 leading-relaxed">{project.description}</p>}
-                <div className="space-y-2">
-                  {project.mood && <div><p className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Mood</p><p className="text-xs text-gray-600 mt-0.5">{project.mood}</p></div>}
-                  {project.goal && <div><p className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Goal</p><p className="text-xs text-gray-600 mt-0.5">{project.goal}</p></div>}
-                  {!project.description && !project.mood && !project.goal && <p className="text-xs text-gray-400 italic leading-relaxed">No details yet. Add context to get better responses from your agents.</p>}
-                </div>
-              </div>
-            ) : editForm}
-          </div>
+        {/* Mobile tab bar — hidden on md+ where both panels show side by side */}
+        <div className="md:hidden flex-shrink-0 flex border-b border-gray-200 bg-white">
+          <button
+            onClick={() => setMobileTab('chat')}
+            className={`flex-1 py-2.5 text-xs font-semibold transition-colors border-b-2 ${
+              mobileTab === 'chat' ? 'text-indigo-600 border-indigo-600' : 'text-gray-500 border-transparent'
+            }`}
+          >
+            Chat
+          </button>
+          <button
+            onClick={() => setMobileTab('tasks')}
+            className={`flex-1 py-2.5 text-xs font-semibold transition-colors border-b-2 flex items-center justify-center gap-1.5 ${
+              mobileTab === 'tasks' ? 'text-indigo-600 border-indigo-600' : 'text-gray-500 border-transparent'
+            }`}
+          >
+            Tasks
+            {tasks.length > 0 && (
+              <span className={`text-[10px] rounded-full px-1.5 py-0.5 font-bold ${
+                mobileTab === 'tasks' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-500'
+              }`}>
+                {tasks.length}
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* Center: mobile overview + chat */}
-        <div className="flex-1 flex flex-col min-w-0">
+        {/* Main content row */}
+        <div className="flex-1 flex min-h-0">
 
-          {/* Mobile overview */}
-          <div className="lg:hidden flex-shrink-0 bg-gray-50 border-b border-gray-200 px-4 py-3">
-            {!editing ? (
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0 space-y-0.5">
+          {/* Left sidebar: overview — lg+ only */}
+          <div className="hidden lg:flex w-60 xl:w-72 flex-shrink-0 border-r border-gray-200 bg-white flex-col overflow-y-auto">
+            <div className="p-4 flex-1">
+              {!editing ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Overview</h3>
+                    <button onClick={openEdit} className="text-xs text-indigo-600 hover:underline">Edit</button>
+                  </div>
                   {project.description && <p className="text-xs text-gray-700 leading-relaxed">{project.description}</p>}
-                  <div className="flex flex-wrap gap-x-4 gap-y-0.5">
-                    {project.mood && <span className="text-xs text-gray-500"><span className="font-medium text-gray-600">Mood:</span> {project.mood}</span>}
-                    {project.goal && <span className="text-xs text-gray-500"><span className="font-medium text-gray-600">Goal:</span> {project.goal}</span>}
-                    {!project.description && !project.mood && !project.goal && <span className="text-xs text-gray-400 italic">No details added.</span>}
+                  <div className="space-y-2">
+                    {project.mood && <div><p className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Mood</p><p className="text-xs text-gray-600 mt-0.5">{project.mood}</p></div>}
+                    {project.goal && <div><p className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Goal</p><p className="text-xs text-gray-600 mt-0.5">{project.goal}</p></div>}
+                    {!project.description && !project.mood && !project.goal && <p className="text-xs text-gray-400 italic leading-relaxed">No details yet. Add context to get better responses from your agents.</p>}
                   </div>
                 </div>
-                <button onClick={openEdit} className="text-xs text-indigo-600 hover:underline flex-shrink-0">Edit</button>
-              </div>
-            ) : editForm}
-          </div>
-
-          {/* Chat messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
-            {loadingHistory && <p className="text-xs text-gray-400 text-center pt-8">Loading…</p>}
-            {!loadingHistory && messages.length === 0 && (
-              <div className="text-center py-12 space-y-2">
-                <p className="text-gray-400 text-sm font-medium">{activeChannelLabel}</p>
-                <p className="text-gray-400 text-xs">Start the conversation — ask anything about this release.</p>
-                <p className="text-gray-300 text-xs mt-1">
-                  Tip: hover over any reply and click{' '}
-                  <span className="font-semibold text-indigo-300">+ Task</span>{' '}
-                  to send it to your task list on the right.
-                </p>
-              </div>
-            )}
-            {messages.map((msg) => {
-              const meta = agentMeta(msg.sender)
-              const isUser = msg.sender === 'user'
-              return (
-                <div key={msg.id} className={`group flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[78%] ${isUser ? '' : 'flex gap-2.5'}`}>
-                    {!isUser && (
-                      <div className={`flex-shrink-0 w-7 h-7 rounded-full ${meta.dot} flex items-center justify-center mt-0.5`}>
-                        <span className="text-white text-[10px] font-bold">{meta.label.charAt(0)}</span>
-                      </div>
-                    )}
-                    <div>
-                      {!isUser && <p className={`text-[11px] font-semibold mb-1 ${meta.nameColor}`}>{meta.label}</p>}
-                      <div className={`rounded-2xl px-4 py-2.5 ${meta.bubble} ${isUser ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}>
-                        {isUser
-                          ? <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                          : <ReactMarkdown components={mdComponents}>{msg.content}</ReactMarkdown>
-                        }
-                      </div>
-                      <div className="flex items-center gap-2 mt-1 px-1">
-                        <p className="text-[10px] text-gray-400">
-                          {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                        {!isUser && (
-                          <button
-                            onClick={() => openTaskModal(msg)}
-                            className="text-[10px] font-medium text-indigo-400 hover:text-indigo-600 border border-indigo-200 hover:border-indigo-400 rounded px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity bg-white hover:bg-indigo-50"
-                          >
-                            + Task
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-            {sending && (
-              <div className="flex justify-start">
-                <div className="flex gap-2.5">
-                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center mt-0.5">
-                    <span className="text-white text-[10px] font-bold">…</span>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold mb-1 text-gray-400">{activeChannelLabel}</p>
-                    <div className="rounded-2xl rounded-tl-sm px-4 py-3 bg-white border border-gray-200">
-                      <div className="flex gap-1 items-center h-4">
-                        <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:0ms]" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:150ms]" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:300ms]" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={bottomRef} />
-          </div>
-
-          {/* Chat input */}
-          <div className="flex-shrink-0 bg-white border-t border-gray-200 px-4 pt-3 pb-4">
-            <div className="flex gap-2 items-end">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={`Message ${activeChannelLabel}… (Enter to send, Shift+Enter for newline)`}
-                rows={2}
-                className="flex-1 resize-none rounded-xl border border-gray-300 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none px-3.5 py-2.5 text-sm text-gray-800 placeholder-gray-400 transition"
-              />
-              <button
-                onClick={() => handleSend()}
-                disabled={!input.trim() || sending}
-                className="flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-xl px-4 py-2.5 text-sm font-medium transition-colors"
-              >
-                Send
-              </button>
+              ) : editForm}
             </div>
           </div>
-        </div>
 
-        {/* Right sidebar: tasks — md+ */}
-        <div
-          ref={tasksPanelRef}
-          className={`hidden md:flex w-64 xl:w-72 flex-shrink-0 border-l flex-col transition-all duration-500 ${
-            taskPanelFlash
-              ? 'border-indigo-400 bg-indigo-50/40 ring-2 ring-indigo-300 ring-inset'
-              : 'border-gray-200 bg-white'
-          }`}
-        >
-          <div className="flex-shrink-0 px-4 pt-4 pb-2 border-b border-gray-100">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="text-xs font-bold text-gray-800">Tasks for this project</p>
-                <p className="text-[10px] text-gray-400 mt-0.5 leading-relaxed">
-                  Turn ideas from your agent into actionable tasks here.
-                </p>
-              </div>
-              {tasks.length > 0 && (
-                <span className="flex-shrink-0 text-[11px] text-gray-400 mt-0.5">
-                  {doneTasks}/{tasks.length}
-                </span>
+          {/* Center: mobile overview + chat — hidden on mobile when tasks tab active */}
+          <div className={`${mobileTab === 'tasks' ? 'hidden md:flex' : 'flex'} flex-1 flex-col min-w-0`}>
+
+            {/* Mobile overview strip */}
+            <div className="lg:hidden flex-shrink-0 bg-gray-50 border-b border-gray-200 px-4 py-3">
+              {!editing ? (
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0 space-y-0.5">
+                    {project.description && <p className="text-xs text-gray-700 leading-relaxed">{project.description}</p>}
+                    <div className="flex flex-wrap gap-x-4 gap-y-0.5">
+                      {project.mood && <span className="text-xs text-gray-500"><span className="font-medium text-gray-600">Mood:</span> {project.mood}</span>}
+                      {project.goal && <span className="text-xs text-gray-500"><span className="font-medium text-gray-600">Goal:</span> {project.goal}</span>}
+                      {!project.description && !project.mood && !project.goal && <span className="text-xs text-gray-400 italic">No details added.</span>}
+                    </div>
+                  </div>
+                  <button onClick={openEdit} className="text-xs text-indigo-600 hover:underline flex-shrink-0">Edit</button>
+                </div>
+              ) : editForm}
+            </div>
+
+            {/* Chat messages */}
+            <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-5 space-y-4">
+              {loadingHistory && <p className="text-xs text-gray-400 text-center pt-8">Loading…</p>}
+              {!loadingHistory && messages.length === 0 && (
+                <div className="text-center py-12 space-y-2">
+                  <p className="text-gray-400 text-sm font-medium">{activeChannelLabel}</p>
+                  <p className="text-gray-400 text-xs">Start the conversation — ask anything about this release.</p>
+                  <p className="text-gray-300 text-xs mt-1">
+                    Tip: tap any agent reply and press{' '}
+                    <span className="font-semibold text-indigo-300">+ Task</span>{' '}
+                    to add it to your task list.
+                  </p>
+                </div>
               )}
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
-            {tasks.length === 0 ? (
-              <div className="pt-6 px-1 text-center space-y-2">
-                <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center mx-auto">
-                  <svg className="w-5 h-5 text-indigo-300" fill="none" viewBox="0 0 20 20">
-                    <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                </div>
-                <p className="text-xs font-medium text-gray-500">No tasks yet.</p>
-                <p className="text-[11px] text-gray-400 leading-relaxed">
-                  Use the chat on the left, then hover any agent reply and click{' '}
-                  <span className="font-semibold text-indigo-400">+ Task</span> — it'll show up here.
-                </p>
-              </div>
-            ) : tasks.map((task) => {
-              const isDone = task.status === 'done'
-              const overdue = !isDone && !!task.due_date && task.due_date < today
-              const dueToday = !isDone && !!task.due_date && task.due_date === today
-              const dueTomorrow = !isDone && !!task.due_date && task.due_date === tomorrow
-
-              const rowBg = overdue
-                ? 'bg-red-50'
-                : dueToday
-                ? 'bg-amber-50'
-                : dueTomorrow
-                ? 'bg-yellow-50/60'
-                : ''
-
-              return (
-                <div key={task.id} className={`group flex items-start gap-2 px-2 py-2 rounded-lg hover:bg-gray-50 ${rowBg}`}>
-                  <button
-                    onClick={() => toggleTask({ taskId: task.id, data: { status: isDone ? 'pending' : 'done' } })}
-                    className={`flex-shrink-0 mt-0.5 w-4 h-4 rounded border transition-colors ${isDone ? 'bg-indigo-500 border-indigo-500' : 'border-gray-300 hover:border-indigo-400'} flex items-center justify-center`}
-                  >
-                    {isDone && (
-                      <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 8">
-                        <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
-                  </button>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-xs leading-snug break-words ${isDone ? 'line-through text-gray-400' : 'text-gray-700'}`}>
-                      {task.title}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-1 mt-0.5">
-                      {task.due_date && (
-                        <p className={`text-[10px] ${overdue ? 'text-red-500 font-medium' : dueToday || dueTomorrow ? 'text-amber-600 font-medium' : 'text-gray-400'}`}>
-                          {task.due_date}
-                        </p>
+              {messages.map((msg) => {
+                const meta = agentMeta(msg.sender)
+                const isUser = msg.sender === 'user'
+                return (
+                  <div key={msg.id} className={`group flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[88%] sm:max-w-[78%] ${isUser ? '' : 'flex gap-2.5'}`}>
+                      {!isUser && (
+                        <div className={`flex-shrink-0 w-7 h-7 rounded-full ${meta.dot} flex items-center justify-center mt-0.5`}>
+                          <span className="text-white text-[10px] font-bold">{meta.label.charAt(0)}</span>
+                        </div>
                       )}
-                      {overdue && (
-                        <span className="text-[9px] font-semibold bg-red-100 text-red-600 rounded-full px-1.5 py-0.5">Overdue</span>
-                      )}
-                      {dueToday && (
-                        <span className="text-[9px] font-semibold bg-amber-100 text-amber-700 rounded-full px-1.5 py-0.5">Today</span>
-                      )}
-                      {dueTomorrow && (
-                        <span className="text-[9px] font-semibold bg-yellow-100 text-yellow-700 rounded-full px-1.5 py-0.5">Tomorrow</span>
-                      )}
-                      {task.source === 'manager_message' && (
-                        <span className="text-[9px] bg-indigo-50 text-indigo-400 rounded px-1 py-0.5 font-medium">From chat</span>
-                      )}
-                      {task.source === 'agent_suggestion' && (
-                        <span className="text-[9px] bg-violet-50 text-violet-400 rounded px-1 py-0.5 font-medium">Suggestion</span>
-                      )}
+                      <div>
+                        {!isUser && <p className={`text-[11px] font-semibold mb-1 ${meta.nameColor}`}>{meta.label}</p>}
+                        <div className={`rounded-2xl px-4 py-2.5 ${meta.bubble} ${isUser ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}>
+                          {isUser
+                            ? <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                            : <ReactMarkdown components={mdComponents}>{msg.content}</ReactMarkdown>
+                          }
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 px-1">
+                          <p className="text-[10px] text-gray-400">
+                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                          {!isUser && (
+                            <button
+                              onClick={() => openTaskModal(msg)}
+                              className="text-[10px] font-medium text-indigo-400 hover:text-indigo-600 border border-indigo-200 hover:border-indigo-400 rounded px-1.5 py-0.5 opacity-0 group-hover:opacity-100 active:opacity-100 transition-opacity bg-white hover:bg-indigo-50"
+                            >
+                              + Task
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <button
-                    onClick={() => removeTask(task.id)}
-                    className="flex-shrink-0 opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-opacity mt-0.5"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 14 14">
-                      <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                    </svg>
-                  </button>
+                )
+              })}
+              {sending && (
+                <div className="flex justify-start">
+                  <div className="flex gap-2.5">
+                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center mt-0.5">
+                      <span className="text-white text-[10px] font-bold">…</span>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold mb-1 text-gray-400">{activeChannelLabel}</p>
+                      <div className="rounded-2xl rounded-tl-sm px-4 py-3 bg-white border border-gray-200">
+                        <div className="flex gap-1 items-center h-4">
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:0ms]" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:150ms]" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:300ms]" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              )
-            })}
-          </div>
+              )}
+              <div ref={bottomRef} />
+            </div>
 
-          <div className="flex-shrink-0 border-t border-gray-100 px-3 py-3">
-            <form onSubmit={handleAddTask} className="space-y-1.5">
-              <input
-                type="text"
-                value={taskInput}
-                onChange={(e) => setTaskInput(e.target.value)}
-                placeholder="Add a task manually…"
-                className="w-full text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder-gray-400"
-              />
-              <div className="flex gap-1.5">
-                <input
-                  type="date"
-                  value={taskDue}
-                  onChange={(e) => setTaskDue(e.target.value)}
-                  className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-500"
+            {/* Chat input */}
+            <div className="flex-shrink-0 bg-white border-t border-gray-200 px-3 sm:px-4 pt-3 pb-4">
+              <div className="flex gap-2 items-end">
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={`Message ${activeChannelLabel}…`}
+                  rows={2}
+                  className="flex-1 resize-none rounded-xl border border-gray-300 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none px-3.5 py-2.5 text-base md:text-sm text-gray-800 placeholder-gray-400 transition"
                 />
                 <button
-                  type="submit"
-                  disabled={!taskInput.trim()}
-                  className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors"
+                  onClick={() => handleSend()}
+                  disabled={!input.trim() || sending}
+                  className="flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-xl px-4 py-2.5 text-sm font-medium transition-colors"
                 >
-                  Add
+                  Send
                 </button>
               </div>
-              <select
-                value={taskCategory}
-                onChange={(e) => setTaskCategory(e.target.value)}
-                className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              >
-                <option value="professional">Professional</option>
-                <option value="personal">Personal</option>
-              </select>
-            </form>
+            </div>
+          </div>
+
+          {/* Right sidebar: tasks — always visible on md+, shown on mobile only when tasks tab active */}
+          <div
+            ref={tasksPanelRef}
+            className={`
+              ${mobileTab === 'tasks' ? 'flex' : 'hidden'} md:flex
+              w-full md:w-64 xl:w-72 flex-shrink-0 border-l flex-col
+              transition-all duration-500
+              ${taskPanelFlash
+                ? 'border-indigo-400 bg-indigo-50/40 ring-2 ring-indigo-300 ring-inset'
+                : 'border-gray-200 bg-white'}
+            `}
+          >
+            {/* Panel header */}
+            <div className="flex-shrink-0 px-4 pt-4 pb-2 border-b border-gray-100">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-xs font-bold text-gray-800">Tasks for this project</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5 leading-relaxed">
+                    Turn ideas from your agent into actionable tasks here.
+                  </p>
+                </div>
+                {tasks.length > 0 && (
+                  <span className="flex-shrink-0 text-[11px] text-gray-400 mt-0.5">
+                    {doneTasks}/{tasks.length}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Task list */}
+            <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+              {tasks.length === 0 ? (
+                <div className="pt-6 px-1 text-center space-y-2">
+                  <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center mx-auto">
+                    <svg className="w-5 h-5 text-indigo-300" fill="none" viewBox="0 0 20 20">
+                      <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                  </div>
+                  <p className="text-xs font-medium text-gray-500">No tasks yet.</p>
+                  <p className="text-[11px] text-gray-400 leading-relaxed">
+                    Chat on the left, tap any agent reply and press{' '}
+                    <span className="font-semibold text-indigo-400">+ Task</span> — it'll show up here.
+                  </p>
+                </div>
+              ) : tasks.map((task) => {
+                const isDone = task.status === 'done'
+                const overdue = !isDone && !!task.due_date && task.due_date < today
+                const dueToday = !isDone && !!task.due_date && task.due_date === today
+                const dueTomorrow = !isDone && !!task.due_date && task.due_date === tomorrow
+
+                const rowBg = overdue
+                  ? 'bg-red-50'
+                  : dueToday
+                  ? 'bg-amber-50'
+                  : dueTomorrow
+                  ? 'bg-yellow-50/60'
+                  : ''
+
+                return (
+                  <div key={task.id} className={`group flex items-start gap-2 px-2 py-2 rounded-lg hover:bg-gray-50 ${rowBg}`}>
+                    <button
+                      onClick={() => toggleTask({ taskId: task.id, data: { status: isDone ? 'pending' : 'done' } })}
+                      className={`flex-shrink-0 mt-0.5 w-4 h-4 rounded border transition-colors ${isDone ? 'bg-indigo-500 border-indigo-500' : 'border-gray-300 hover:border-indigo-400'} flex items-center justify-center`}
+                    >
+                      {isDone && (
+                        <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 8">
+                          <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs leading-snug break-words ${isDone ? 'line-through text-gray-400' : 'text-gray-700'}`}>
+                        {task.title}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                        {task.due_date && (
+                          <p className={`text-[10px] ${overdue ? 'text-red-500 font-medium' : dueToday || dueTomorrow ? 'text-amber-600 font-medium' : 'text-gray-400'}`}>
+                            {task.due_date}
+                          </p>
+                        )}
+                        {overdue && <span className="text-[9px] font-semibold bg-red-100 text-red-600 rounded-full px-1.5 py-0.5">Overdue</span>}
+                        {dueToday && <span className="text-[9px] font-semibold bg-amber-100 text-amber-700 rounded-full px-1.5 py-0.5">Today</span>}
+                        {dueTomorrow && <span className="text-[9px] font-semibold bg-yellow-100 text-yellow-700 rounded-full px-1.5 py-0.5">Tomorrow</span>}
+                        {task.source === 'manager_message' && <span className="text-[9px] bg-indigo-50 text-indigo-400 rounded px-1 py-0.5 font-medium">From chat</span>}
+                        {task.source === 'agent_suggestion' && <span className="text-[9px] bg-violet-50 text-violet-400 rounded px-1 py-0.5 font-medium">Suggestion</span>}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => removeTask(task.id)}
+                      className="flex-shrink-0 opacity-0 group-hover:opacity-100 active:opacity-100 text-gray-300 hover:text-red-400 transition-opacity mt-0.5"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 14 14">
+                        <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Add task form */}
+            <div className="flex-shrink-0 border-t border-gray-100 px-3 py-3">
+              <form onSubmit={handleAddTask} className="space-y-1.5">
+                <input
+                  type="text"
+                  value={taskInput}
+                  onChange={(e) => setTaskInput(e.target.value)}
+                  placeholder="Add a task manually…"
+                  className="w-full text-base md:text-xs border border-gray-200 rounded-lg px-2.5 py-2 md:py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder-gray-400"
+                />
+                <div className="flex gap-1.5">
+                  <input
+                    type="date"
+                    value={taskDue}
+                    onChange={(e) => setTaskDue(e.target.value)}
+                    className="flex-1 text-base md:text-xs border border-gray-200 rounded-lg px-2 py-2 md:py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!taskInput.trim()}
+                    className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-lg px-3 py-2 md:py-1.5 text-sm md:text-xs font-medium transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+                <select
+                  value={taskCategory}
+                  onChange={(e) => setTaskCategory(e.target.value)}
+                  className="w-full text-base md:text-xs border border-gray-200 rounded-lg px-2 py-2 md:py-1.5 bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                >
+                  <option value="professional">Professional</option>
+                  <option value="personal">Personal</option>
+                </select>
+              </form>
+            </div>
           </div>
         </div>
       </div>
@@ -544,7 +574,7 @@ export default function ProjectDetailPage() {
                 onChange={(e) => setModalTitle(e.target.value)}
                 placeholder="Task title"
                 autoFocus
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Due date (optional)</label>
@@ -552,7 +582,7 @@ export default function ProjectDetailPage() {
                   type="date"
                   value={modalDue}
                   onChange={(e) => setModalDue(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-600"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-600"
                 />
               </div>
               <div>
@@ -560,7 +590,7 @@ export default function ProjectDetailPage() {
                 <select
                   value={modalCategory}
                   onChange={(e) => setModalCategory(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base md:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700"
                 >
                   <option value="professional">Professional task</option>
                   <option value="personal">Personal schedule</option>
@@ -570,14 +600,14 @@ export default function ProjectDetailPage() {
                 <button
                   type="submit"
                   disabled={!modalTitle.trim()}
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-lg px-4 py-3 sm:py-2 text-sm font-medium transition-colors"
                 >
                   Save task
                 </button>
                 <button
                   type="button"
                   onClick={closeTaskModal}
-                  className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                  className="px-4 py-3 sm:py-2 text-sm text-gray-500 hover:text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
